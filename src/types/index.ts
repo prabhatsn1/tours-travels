@@ -85,6 +85,10 @@ export interface BlogPost {
     metaDescription: string;
     keywords: string[];
   };
+  featured?: boolean;
+  isActive?: boolean;
+  viewCount?: number;
+  likesCount?: number;
 }
 
 export interface Testimonial {
