@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Container,
@@ -16,6 +16,8 @@ import {
   CardContent,
   CardMedia,
   Breadcrumbs,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import {
   Bookmark,
@@ -28,7 +30,6 @@ import {
   LinkedIn,
   Print,
   ArrowBack,
-  ArrowForward,
   AccessTime,
   CalendarToday,
   Visibility,
@@ -38,156 +39,102 @@ import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import Layout from "@/components/layout/Layout";
-import { blogPosts } from "@/data/sampleData";
 import { BlogPost } from "@/types";
-
-// Extended blog posts (same as in blog page)
-const extendedBlogPosts: BlogPost[] = [
-  ...blogPosts,
-  {
-    id: "2",
-    title: "Essential Travel Photography Tips for Beginners",
-    slug: "travel-photography-tips-beginners",
-    excerpt:
-      "Capture stunning memories of your travels with these professional photography tips and techniques.",
-    content: `
-      <h2>Introduction to Travel Photography</h2>
-      <p>Travel photography is one of the most rewarding forms of photography, allowing you to capture memories and share the beauty of the world with others. Whether you're using a smartphone or a professional camera, these tips will help you take stunning photos during your travels.</p>
-
-      <h3>1. Plan Your Shots</h3>
-      <p>Research your destination before you arrive. Look up iconic viewpoints, local customs, and the best times for photography. Golden hour (just after sunrise and before sunset) provides the most flattering light for most subjects.</p>
-
-      <h3>2. Master the Rule of Thirds</h3>
-      <p>Divide your frame into nine equal sections with two horizontal and two vertical lines. Place important elements along these lines or at their intersections. This creates more balanced and visually appealing compositions.</p>
-
-      <h3>3. Include People in Your Shots</h3>
-      <p>Adding people to your landscape photos provides scale and human interest. Always ask permission when photographing locals, and consider hiring local guides who can help you connect with communities respectfully.</p>
-
-      <h3>4. Pack Light but Smart</h3>
-      <p>Bring versatile lenses that can handle multiple situations. A 24-70mm lens is perfect for most travel scenarios, while a 50mm prime lens is excellent for street photography and portraits.</p>
-
-      <h3>5. Backup Your Photos</h3>
-      <p>Always have a backup plan for your photos. Use cloud storage, multiple memory cards, or portable hard drives to ensure you don't lose precious memories.</p>
-
-      <h2>Conclusion</h2>
-      <p>Remember, the best camera is the one you have with you. Focus on telling stories through your images, and don't be afraid to experiment with different perspectives and techniques. Happy shooting!</p>
-    `,
-    author: {
-      name: "Mike Chen",
-      avatar: "/images/authors/mike.jpg",
-      bio: "Professional travel photographer and content creator with over 8 years of experience capturing destinations worldwide.",
-    },
-    publishedAt: "2025-01-12",
-    readTime: 6,
-    category: "Photography",
-    tags: ["Photography", "Travel Tips", "Beginner Guide", "Camera"],
-    featuredImage: "/images/blog/photography-tips.jpg",
-    images: [
-      "/images/blog/photography-1.jpg",
-      "/images/blog/photography-2.jpg",
-    ],
-    seo: {
-      metaTitle: "Travel Photography Tips for Beginners - Complete Guide",
-      metaDescription:
-        "Learn professional travel photography techniques to capture amazing photos during your trips.",
-      keywords: ["travel photography", "photography tips", "beginner guide"],
-    },
-  },
-  {
-    id: "3",
-    title: "Budget Travel: How to See the World for Less",
-    slug: "budget-travel-guide",
-    excerpt:
-      "Discover proven strategies to travel the world on a budget without compromising on experiences.",
-    content: `
-      <h2>Travel More, Spend Less</h2>
-      <p>Traveling on a budget doesn't mean sacrificing quality experiences. With careful planning and smart strategies, you can explore amazing destinations without breaking the bank.</p>
-
-      <h3>1. Use Budget Airlines and Be Flexible</h3>
-      <p>Book flights during off-peak seasons and be flexible with your dates. Use comparison sites like Skyscanner and Google Flights to find the best deals. Consider budget airlines for short-haul flights.</p>
-
-      <h3>2. Stay in Alternative Accommodations</h3>
-      <p>Hostels, Airbnb, and homestays often provide better value than hotels. Many hostels now offer private rooms, and staying with locals gives you authentic cultural experiences.</p>
-
-      <h3>3. Eat Like a Local</h3>
-      <p>Street food and local markets offer delicious meals at fraction of restaurant prices. Cook your own meals when possible, and always carry a reusable water bottle.</p>
-
-      <h3>4. Use Public Transportation</h3>
-      <p>Public transport is usually much cheaper than taxis or rental cars. Many cities offer tourist passes that include unlimited transport and attraction discounts.</p>
-
-      <h3>5. Free Activities and Attractions</h3>
-      <p>Research free walking tours, museums with free admission days, parks, beaches, and hiking trails. Many cities offer incredible free experiences if you know where to look.</p>
-
-      <h2>Smart Money Management</h2>
-      <p>Set a daily budget and track your expenses. Use apps like Trail Wallet or TravelSpend to monitor your spending and stay on track with your budget goals.</p>
-    `,
-    author: {
-      name: "Lisa Rodriguez",
-      avatar: "/images/authors/lisa.jpg",
-      bio: "Budget travel expert and digital nomad who has visited 50+ countries on a shoestring budget.",
-    },
-    publishedAt: "2025-01-10",
-    readTime: 10,
-    category: "Budget Travel",
-    tags: ["Budget Travel", "Money Saving", "Travel Hacks", "Backpacking"],
-    featuredImage: "/images/blog/budget-travel.jpg",
-    images: ["/images/blog/budget-1.jpg"],
-    seo: {
-      metaTitle: "Budget Travel Guide - See the World for Less",
-      metaDescription:
-        "Learn how to travel on a budget with expert tips and money-saving strategies.",
-      keywords: ["budget travel", "cheap travel", "travel tips"],
-    },
-  },
-];
 
 const BlogPostPage: React.FC = () => {
   const params = useParams();
   const slug = params.slug as string;
 
+  const [post, setPost] = useState<BlogPost | null>(null);
+  const [relatedPosts, setRelatedPosts] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
-  const [likes, setLikes] = useState(42);
+  const [likes, setLikes] = useState(0);
 
-  // Find the blog post by slug
-  const post = extendedBlogPosts.find((p) => p.slug === slug);
+  // Fetch blog post by slug
+  const fetchPost = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  if (!post) {
-    return (
-      <Layout>
-        <Container maxWidth="lg" sx={{ py: 8, textAlign: "center" }}>
-          <Typography variant="h4" gutterBottom>
-            Blog Post Not Found
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-            The requested blog post could not be found.
-          </Typography>
-          <Button
-            variant="contained"
-            component={Link}
-            href="/blog"
-            startIcon={<ArrowBack />}
-          >
-            Back to Blog
-          </Button>
-        </Container>
-      </Layout>
-    );
-  }
+      const response = await fetch(`/api/blog/${slug}`);
+      const data = await response.json();
 
-  // Get related posts (for simplicity, just get other posts)
-  const relatedPosts = extendedBlogPosts
-    .filter((p) => p.id !== post.id && p.category === post.category)
-    .slice(0, 3);
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to fetch blog post");
+      }
 
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    setLikes(isLiked ? likes - 1 : likes + 1);
+      if (data.success) {
+        setPost(data.data);
+        setLikes(data.data.likesCount || 0);
+      } else {
+        throw new Error(data.error || "Blog post not found");
+      }
+    } catch (err) {
+      console.error("Error fetching blog post:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch blog post"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [slug]);
+
+  // Fetch related posts
+  const fetchRelatedPosts = useCallback(
+    async (category: string) => {
+      try {
+        const response = await fetch(`/api/blog?category=${category}&limit=3`);
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          // Filter out the current post from related posts
+          const filtered = data.data.filter((p: BlogPost) => p.slug !== slug);
+          setRelatedPosts(filtered.slice(0, 3));
+        }
+      } catch (err) {
+        console.error("Error fetching related posts:", err);
+      }
+    },
+    [slug]
+  );
+
+  // Fetch post on component mount or slug change
+  useEffect(() => {
+    if (slug) {
+      fetchPost();
+    }
+  }, [slug, fetchPost]);
+
+  // Fetch related posts when post is loaded
+  useEffect(() => {
+    if (post?.category) {
+      fetchRelatedPosts(post.category);
+    }
+  }, [post?.category, fetchRelatedPosts]);
+
+  const handleLike = async () => {
+    if (!post) return;
+
+    try {
+      const response = await fetch(`/api/blog/${slug}`, {
+        method: "PATCH",
+      });
+
+      if (response.ok) {
+        setIsLiked(!isLiked);
+        setLikes(isLiked ? likes - 1 : likes + 1);
+      }
+    } catch (err) {
+      console.error("Error liking post:", err);
+    }
   };
 
   const handleShare = (platform: string) => {
     const url = window.location.href;
-    const title = post.title;
+    const title = post?.title || "";
 
     let shareUrl = "";
     switch (platform) {
@@ -206,6 +153,55 @@ const BlogPostPage: React.FC = () => {
       window.open(shareUrl, "_blank", "width=600,height=400");
     }
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <Layout>
+        <Container maxWidth="lg" sx={{ py: 8 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              minHeight: "50vh",
+            }}
+          >
+            <CircularProgress size={48} />
+          </Box>
+        </Container>
+      </Layout>
+    );
+  }
+
+  // Error state
+  if (error || !post) {
+    return (
+      <Layout>
+        <Container maxWidth="lg" sx={{ py: 8 }}>
+          <Box sx={{ textAlign: "center" }}>
+            <Alert severity="error" sx={{ mb: 4, maxWidth: 600, mx: "auto" }}>
+              {error || "Blog post not found"}
+            </Alert>
+            <Typography variant="h4" gutterBottom>
+              Blog Post Not Found
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+              The requested blog post could not be found.
+            </Typography>
+            <Button
+              variant="contained"
+              component={Link}
+              href="/blog"
+              startIcon={<ArrowBack />}
+            >
+              Back to Blog
+            </Button>
+          </Box>
+        </Container>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -324,7 +320,7 @@ const BlogPostPage: React.FC = () => {
                               variant="caption"
                               color="text.secondary"
                             >
-                              1.2k views
+                              {post.viewCount || 0} views
                             </Typography>
                           </Stack>
                         </Stack>
@@ -406,6 +402,16 @@ const BlogPostPage: React.FC = () => {
                       fontSize: "1.1rem",
                       lineHeight: 1.8,
                       mb: 2,
+                      color: "text.secondary",
+                    },
+                    "& ul": {
+                      fontSize: "1.1rem",
+                      lineHeight: 1.8,
+                      mb: 2,
+                      pl: 3,
+                    },
+                    "& li": {
+                      mb: 1,
                       color: "text.secondary",
                     },
                     "& img": {
@@ -601,15 +607,9 @@ const BlogPostPage: React.FC = () => {
             >
               Back to Blog
             </Button>
-            <Button
-              endIcon={<ArrowForward />}
-              variant="contained"
-              sx={{
-                background: "linear-gradient(45deg, #667eea 30%, #764ba2 90%)",
-              }}
-            >
-              Next Article
-            </Button>
+            <Typography variant="body2" color="text.secondary">
+              {likes} likes
+            </Typography>
           </Stack>
         </Box>
       </Container>
