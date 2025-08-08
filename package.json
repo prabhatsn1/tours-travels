@@ -1,0 +1,42 @@
+{
+  "name": "tours-travels",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:seed": "tsx src/scripts/seed.ts",
+    "db:reset": "tsx src/scripts/seed.ts"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@hookform/resolvers": "^5.2.1",
+    "@mui/icons-material": "^7.3.1",
+    "@mui/material": "^7.3.1",
+    "axios": "^1.11.0",
+    "date-fns": "^4.1.0",
+    "framer-motion": "^12.23.12",
+    "mongodb": "^6.18.0",
+    "mongoose": "^8.17.1",
+    "next": "15.4.6",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-hook-form": "^7.62.0",
+    "yup": "^1.7.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.4.6",
+    "tailwindcss": "^4",
+    "tsx": "^4.20.3",
+    "typescript": "^5"
+  }
+}
