@@ -15,7 +15,6 @@ import {
   Container,
   useMediaQuery,
   useTheme,
-  Avatar,
   Chip,
   alpha,
 } from "@mui/material";
