@@ -32,6 +32,8 @@ import {
   Visibility as ViewIcon,
   MoreVert as MoreVertIcon,
   Search as SearchIcon,
+  CloudDone as CloudDoneIcon,
+  CloudOff as CloudOffIcon,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -54,6 +56,15 @@ const AdminPackagesPage: React.FC = () => {
   const [selectedPackage, setSelectedPackage] = useState<TourPackage | null>(
     null
   );
+  const [dbStatus, setDbStatus] = useState<{
+    connected: boolean;
+    status: string;
+    loading: boolean;
+  }>({
+    connected: false,
+    status: "unknown",
+    loading: false,
+  });
 
   // Fetch packages
   const fetchPackages = async () => {
@@ -75,6 +86,33 @@ const AdminPackagesPage: React.FC = () => {
 
   useEffect(() => {
     fetchPackages();
+  }, []);
+
+  // Check database connection
+  const checkDatabaseConnection = async () => {
+    setDbStatus((prev) => ({ ...prev, loading: true }));
+
+    try {
+      const response = await fetch("/api/health");
+      const result = await response.json();
+
+      setDbStatus({
+        connected: result.success && result.data.database.connected,
+        status: result.data.database.status,
+        loading: false,
+      });
+    } catch (error) {
+      console.error("Database connection check failed:", error);
+      setDbStatus({
+        connected: false,
+        status: "error",
+        loading: false,
+      });
+    }
+  };
+
+  useEffect(() => {
+    checkDatabaseConnection();
   }, []);
 
   // Filter packages
@@ -166,19 +204,48 @@ const AdminPackagesPage: React.FC = () => {
               justifyContent: "space-between",
               alignItems: "center",
               mb: 4,
+              flexWrap: "wrap",
+              gap: 2,
             }}
           >
             <Typography variant="h4" component="h1" fontWeight="bold">
               Package Management
             </Typography>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => router.push("/admin/packages/add")}
-              size="large"
-            >
-              Add New Package
-            </Button>
+
+            <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+              {/* Database Status Button */}
+              <Button
+                variant="outlined"
+                startIcon={
+                  dbStatus.loading ? (
+                    <CircularProgress size={16} />
+                  ) : dbStatus.connected ? (
+                    <CloudDoneIcon />
+                  ) : (
+                    <CloudOffIcon />
+                  )
+                }
+                onClick={checkDatabaseConnection}
+                disabled={dbStatus.loading}
+                color={dbStatus.connected ? "success" : "error"}
+                sx={{ minWidth: 160 }}
+              >
+                {dbStatus.loading
+                  ? "Checking..."
+                  : dbStatus.connected
+                  ? "DB Connected"
+                  : "DB Disconnected"}
+              </Button>
+
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => router.push("/admin/packages/add")}
+                size="large"
+              >
+                Add New Package
+              </Button>
+            </Box>
           </Box>
 
           {/* Filters */}
