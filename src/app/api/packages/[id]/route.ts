@@ -4,19 +4,29 @@ import TourPackage from "@/lib/models/TourPackage";
 import { isValidObjectId } from "mongoose";
 
 /**
- * GET /api/packages/[id] - Get a specific tour package by ID
+ * GET /api/packages/[id] - Get a specific tour package
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Connect to MongoDB
     await connectWithMongoose();
 
-    const { id } = params;
+    const { id } = await params;
 
-    // Validate MongoDB ObjectId
+    if (!id) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Package ID is required",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate ObjectId format
     if (!isValidObjectId(id)) {
       return NextResponse.json(
         {
@@ -27,14 +37,14 @@ export async function GET(
       );
     }
 
-    // Find package by ID
-    const packageDoc = await TourPackage.findById(id).lean();
+    // Find the package by ID
+    const tourPackage = await TourPackage.findById(id).lean();
 
-    if (!packageDoc) {
+    if (!tourPackage) {
       return NextResponse.json(
         {
           success: false,
-          error: "Package not found",
+          error: "Tour package not found",
         },
         { status: 404 }
       );
@@ -42,9 +52,10 @@ export async function GET(
 
     // Transform the response
     const transformedPackage = {
-      ...packageDoc,
-      id: packageDoc._id.toString(),
+      ...tourPackage,
+      id: tourPackage._id.toString(),
       _id: undefined,
+      __v: undefined,
     };
 
     return NextResponse.json({
@@ -52,12 +63,11 @@ export async function GET(
       data: transformedPackage,
     });
   } catch (error) {
-    console.error("Error fetching package:", error);
+    console.error("Error fetching tour package:", error);
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to fetch package",
-        details: error instanceof Error ? error.message : "Unknown error",
+        error: "Failed to fetch tour package",
       },
       { status: 500 }
     );
@@ -69,15 +79,25 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Connect to MongoDB
     await connectWithMongoose();
 
-    const { id } = params;
+    const { id } = await params;
 
-    // Validate MongoDB ObjectId
+    if (!id) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Package ID is required",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate ObjectId format
     if (!isValidObjectId(id)) {
       return NextResponse.json(
         {
@@ -97,17 +117,21 @@ export async function PUT(
     delete updateData.createdAt;
     delete updateData.updatedAt;
 
-    // Update package
-    const updatedPackage = await TourPackage.findByIdAndUpdate(id, updateData, {
-      new: true, // Return updated document
-      runValidators: true, // Run schema validation
-    }).lean();
+    // Find and update the package
+    const updatedPackage = await TourPackage.findByIdAndUpdate(
+      id,
+      updateData,
+      {
+        new: true,
+        runValidators: true,
+      }
+    ).lean();
 
     if (!updatedPackage) {
       return NextResponse.json(
         {
           success: false,
-          error: "Package not found",
+          error: "Tour package not found",
         },
         { status: 404 }
       );
@@ -118,23 +142,30 @@ export async function PUT(
       ...updatedPackage,
       id: updatedPackage._id.toString(),
       _id: undefined,
+      __v: undefined,
     };
 
     return NextResponse.json({
       success: true,
       data: transformedPackage,
-      message: "Package updated successfully",
+      message: "Tour package updated successfully",
     });
-  } catch (error) {
-    console.error("Error updating package:", error);
+  } catch (error: unknown) {
+    console.error("Error updating tour package:", error);
 
     // Handle validation errors
     if (error instanceof Error && error.name === "ValidationError") {
+      const mongoError = error as Error & {
+        errors: Record<string, { message: string }>;
+      };
+      const validationErrors = Object.values(mongoError.errors).map(
+        (err: { message: string }) => err.message
+      );
       return NextResponse.json(
         {
           success: false,
           error: "Validation failed",
-          details: error.message,
+          details: validationErrors,
         },
         { status: 400 }
       );
@@ -143,8 +174,7 @@ export async function PUT(
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to update package",
-        details: error instanceof Error ? error.message : "Unknown error",
+        error: "Failed to update tour package",
       },
       { status: 500 }
     );
@@ -156,15 +186,25 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Connect to MongoDB
     await connectWithMongoose();
 
-    const { id } = params;
+    const { id } = await params;
 
-    // Validate MongoDB ObjectId
+    if (!id) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Package ID is required",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate ObjectId format
     if (!isValidObjectId(id)) {
       return NextResponse.json(
         {
@@ -175,14 +215,14 @@ export async function DELETE(
       );
     }
 
-    // Delete package
-    const deletedPackage = await TourPackage.findByIdAndDelete(id);
+    // Find and delete the package
+    const deletedPackage = await TourPackage.findByIdAndDelete(id).lean();
 
     if (!deletedPackage) {
       return NextResponse.json(
         {
           success: false,
-          error: "Package not found",
+          error: "Tour package not found",
         },
         { status: 404 }
       );
@@ -190,15 +230,14 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: "Package deleted successfully",
+      message: "Tour package deleted successfully",
     });
   } catch (error) {
-    console.error("Error deleting package:", error);
+    console.error("Error deleting tour package:", error);
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to delete package",
-        details: error instanceof Error ? error.message : "Unknown error",
+        error: "Failed to delete tour package",
       },
       { status: 500 }
     );
