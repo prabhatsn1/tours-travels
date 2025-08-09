@@ -201,7 +201,6 @@ const BlogPostSchema = new Schema<IBlogPost>(
 BlogPostSchema.index({ category: 1, featured: -1, publishedAt: -1 });
 BlogPostSchema.index({ publishedAt: -1 });
 BlogPostSchema.index({ featured: -1, publishedAt: -1 });
-BlogPostSchema.index({ slug: 1 }, { unique: true });
 BlogPostSchema.index({ isActive: 1, publishedAt: -1 });
 BlogPostSchema.index({
   title: "text",
