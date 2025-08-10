@@ -24,11 +24,7 @@ import {
   ArrowBack as ArrowBackIcon,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
-import {
-  useForm,
-  Controller,
-  SubmitHandler,
-} from "react-hook-form";
+import { useForm, Controller, SubmitHandler } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useRouter } from "next/navigation";
@@ -100,7 +96,7 @@ const destinationSchema: yup.ObjectSchema<DestinationFormData> = yup.object({
 // Constants
 const regions = [
   "Asia",
-  "Europe", 
+  "Europe",
   "North America",
   "South America",
   "Africa",
@@ -110,13 +106,39 @@ const regions = [
 ];
 
 const currencies = [
-  "USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY", "INR", "SGD"
+  "USD",
+  "EUR",
+  "GBP",
+  "JPY",
+  "CAD",
+  "AUD",
+  "CHF",
+  "CNY",
+  "INR",
+  "SGD",
 ];
 
 const commonTags = [
-  "Beach", "Mountains", "City", "Culture", "Adventure", "Wildlife", "History",
-  "Food", "Shopping", "Nightlife", "Family-Friendly", "Luxury", "Budget",
-  "Nature", "Architecture", "Museums", "Art", "Photography", "Hiking", "Water Sports"
+  "Beach",
+  "Mountains",
+  "City",
+  "Culture",
+  "Adventure",
+  "Wildlife",
+  "History",
+  "Food",
+  "Shopping",
+  "Nightlife",
+  "Family-Friendly",
+  "Luxury",
+  "Budget",
+  "Nature",
+  "Architecture",
+  "Museums",
+  "Art",
+  "Photography",
+  "Hiking",
+  "Water Sports",
 ];
 
 const AddDestinationPage: React.FC = () => {
@@ -125,7 +147,7 @@ const AddDestinationPage: React.FC = () => {
     type: "success" | "error" | null;
     message: string;
   }>({ type: null, message: "" });
-  
+
   // State for dynamic arrays
   const [newHighlight, setNewHighlight] = useState("");
   const [newImage, setNewImage] = useState("");
@@ -208,7 +230,7 @@ const AddDestinationPage: React.FC = () => {
 
         // Redirect to destinations list after successful creation
         setTimeout(() => {
-          router.push("/admin/destinations");
+          router.push("/destinations");
         }, 2000);
       } else {
         throw new Error(response.error || "Failed to create destination");
@@ -252,7 +274,8 @@ const AddDestinationPage: React.FC = () => {
                 Add New Destination
               </Typography>
               <Typography variant="body1" color="text.secondary">
-                Create a new travel destination with detailed information and imagery.
+                Create a new travel destination with detailed information and
+                imagery.
               </Typography>
             </Box>
           </Stack>
@@ -319,7 +342,11 @@ const AddDestinationPage: React.FC = () => {
                               ))}
                             </Select>
                             {errors.region && (
-                              <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 2 }}>
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{ mt: 0.5, ml: 2 }}
+                              >
                                 {errors.region.message}
                               </Typography>
                             )}
@@ -373,7 +400,11 @@ const AddDestinationPage: React.FC = () => {
                               ))}
                             </Select>
                             {errors.currency && (
-                              <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 2 }}>
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{ mt: 0.5, ml: 2 }}
+                              >
                                 {errors.currency.message}
                               </Typography>
                             )}
@@ -465,7 +496,11 @@ const AddDestinationPage: React.FC = () => {
                           onKeyPress={(e) => {
                             if (e.key === "Enter") {
                               e.preventDefault();
-                              addItem("highlights", newHighlight, watchedHighlights);
+                              addItem(
+                                "highlights",
+                                newHighlight,
+                                watchedHighlights
+                              );
                               setNewHighlight("");
                             }
                           }}
@@ -474,7 +509,11 @@ const AddDestinationPage: React.FC = () => {
                           variant="contained"
                           startIcon={<AddIcon />}
                           onClick={() => {
-                            addItem("highlights", newHighlight, watchedHighlights);
+                            addItem(
+                              "highlights",
+                              newHighlight,
+                              watchedHighlights
+                            );
                             setNewHighlight("");
                           }}
                         >
@@ -495,7 +534,11 @@ const AddDestinationPage: React.FC = () => {
                         ))}
                       </Box>
                       {errors.highlights && (
-                        <Typography variant="caption" color="error" sx={{ mt: 1 }}>
+                        <Typography
+                          variant="caption"
+                          color="error"
+                          sx={{ mt: 1 }}
+                        >
                           {errors.highlights.message}
                         </Typography>
                       )}
@@ -545,7 +588,11 @@ const AddDestinationPage: React.FC = () => {
                         ))}
                       </Box>
                       {errors.images && (
-                        <Typography variant="caption" color="error" sx={{ mt: 1 }}>
+                        <Typography
+                          variant="caption"
+                          color="error"
+                          sx={{ mt: 1 }}
+                        >
                           {errors.images.message}
                         </Typography>
                       )}
@@ -556,7 +603,7 @@ const AddDestinationPage: React.FC = () => {
                       <Typography variant="subtitle1" gutterBottom>
                         Tags
                       </Typography>
-                      
+
                       {/* Custom tag input */}
                       <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
                         <TextField
@@ -585,17 +632,32 @@ const AddDestinationPage: React.FC = () => {
                       </Stack>
 
                       {/* Preset tags */}
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mb: 1 }}
+                      >
                         Or choose from common tags:
                       </Typography>
-                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: 1,
+                          mb: 2,
+                        }}
+                      >
                         {commonTags.map((tag) => (
                           <Chip
                             key={tag}
                             label={tag}
                             onClick={() => addTagFromPreset(tag)}
-                            color={watchedTags.includes(tag) ? "primary" : "default"}
-                            variant={watchedTags.includes(tag) ? "filled" : "outlined"}
+                            color={
+                              watchedTags.includes(tag) ? "primary" : "default"
+                            }
+                            variant={
+                              watchedTags.includes(tag) ? "filled" : "outlined"
+                            }
                             size="small"
                             sx={{ cursor: "pointer" }}
                           />
@@ -603,7 +665,10 @@ const AddDestinationPage: React.FC = () => {
                       </Box>
 
                       {/* Selected tags */}
-                      <Typography variant="body2" sx={{ mb: 1, fontWeight: "medium" }}>
+                      <Typography
+                        variant="body2"
+                        sx={{ mb: 1, fontWeight: "medium" }}
+                      >
                         Selected tags:
                       </Typography>
                       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
@@ -611,14 +676,20 @@ const AddDestinationPage: React.FC = () => {
                           <Chip
                             key={index}
                             label={tag}
-                            onDelete={() => removeItem("tags", index, watchedTags)}
+                            onDelete={() =>
+                              removeItem("tags", index, watchedTags)
+                            }
                             color="info"
                             variant="outlined"
                           />
                         ))}
                       </Box>
                       {errors.tags && (
-                        <Typography variant="caption" color="error" sx={{ mt: 1 }}>
+                        <Typography
+                          variant="caption"
+                          color="error"
+                          sx={{ mt: 1 }}
+                        >
                           {errors.tags.message}
                         </Typography>
                       )}
@@ -627,7 +698,9 @@ const AddDestinationPage: React.FC = () => {
                 </Box>
 
                 {/* Submit Button */}
-                <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
+                <Box
+                  sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}
+                >
                   <Stack direction="row" spacing={2}>
                     <Button
                       variant="outlined"
@@ -643,7 +716,9 @@ const AddDestinationPage: React.FC = () => {
                       disabled={isSubmitting}
                       sx={{ minWidth: 200 }}
                     >
-                      {isSubmitting ? "Creating Destination..." : "Create Destination"}
+                      {isSubmitting
+                        ? "Creating Destination..."
+                        : "Create Destination"}
                     </Button>
                   </Stack>
                 </Box>
