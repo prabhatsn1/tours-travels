@@ -28,11 +28,7 @@ import {
   Visibility as VisibilityIcon,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
-import {
-  useForm,
-  Controller,
-  SubmitHandler,
-} from "react-hook-form";
+import { useForm, Controller, SubmitHandler } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useRouter } from "next/navigation";
@@ -67,19 +63,37 @@ interface BlogFormData {
 
 // Validation schema
 const blogSchema: yup.ObjectSchema<BlogFormData> = yup.object({
-  title: yup.string().required("Title is required").max(200, "Title cannot exceed 200 characters"),
+  title: yup
+    .string()
+    .required("Title is required")
+    .max(200, "Title cannot exceed 200 characters"),
   slug: yup
     .string()
     .required("Slug is required")
     .max(100, "Slug cannot exceed 100 characters")
-    .matches(/^[a-z0-9-]+$/, "Slug can only contain lowercase letters, numbers and hyphens"),
-  excerpt: yup.string().required("Excerpt is required").max(500, "Excerpt cannot exceed 500 characters"),
+    .matches(
+      /^[a-z0-9-]+$/,
+      "Slug can only contain lowercase letters, numbers and hyphens"
+    ),
+  excerpt: yup
+    .string()
+    .required("Excerpt is required")
+    .max(500, "Excerpt cannot exceed 500 characters"),
   content: yup.string().required("Content is required"),
   author: yup
     .object({
-      name: yup.string().required("Author name is required").max(100, "Author name cannot exceed 100 characters"),
-      avatar: yup.string().url("Must be a valid URL").required("Author avatar is required"),
-      bio: yup.string().required("Author bio is required").max(500, "Author bio cannot exceed 500 characters"),
+      name: yup
+        .string()
+        .required("Author name is required")
+        .max(100, "Author name cannot exceed 100 characters"),
+      avatar: yup
+        .string()
+        .url("Must be a valid URL")
+        .required("Author avatar is required"),
+      bio: yup
+        .string()
+        .required("Author bio is required")
+        .max(500, "Author bio cannot exceed 500 characters"),
     })
     .required(),
   publishedAt: yup.string().required("Published date is required"),
@@ -95,15 +109,24 @@ const blogSchema: yup.ObjectSchema<BlogFormData> = yup.object({
     .min(1, "At least one tag is required")
     .max(20, "Cannot have more than 20 tags")
     .required(),
-  featuredImage: yup.string().url("Must be a valid URL").required("Featured image is required"),
+  featuredImage: yup
+    .string()
+    .url("Must be a valid URL")
+    .required("Featured image is required"),
   images: yup
     .array()
     .of(yup.string().url("Must be a valid URL").required())
     .required(),
   seo: yup
     .object({
-      metaTitle: yup.string().required("Meta title is required").max(60, "Meta title cannot exceed 60 characters"),
-      metaDescription: yup.string().required("Meta description is required").max(160, "Meta description cannot exceed 160 characters"),
+      metaTitle: yup
+        .string()
+        .required("Meta title is required")
+        .max(60, "Meta title cannot exceed 60 characters"),
+      metaDescription: yup
+        .string()
+        .required("Meta description is required")
+        .max(160, "Meta description cannot exceed 160 characters"),
       keywords: yup
         .array()
         .of(yup.string().required())
@@ -131,9 +154,26 @@ const categories = [
 ];
 
 const commonTags = [
-  "travel", "backpacking", "luxury", "budget", "solo-travel", "family-travel",
-  "adventure", "beach", "mountains", "city-break", "culture", "food", "photography",
-  "tips", "guide", "itinerary", "packing", "safety", "visa", "flights"
+  "travel",
+  "backpacking",
+  "luxury",
+  "budget",
+  "solo-travel",
+  "family-travel",
+  "adventure",
+  "beach",
+  "mountains",
+  "city-break",
+  "culture",
+  "food",
+  "photography",
+  "tips",
+  "guide",
+  "itinerary",
+  "packing",
+  "safety",
+  "visa",
+  "flights",
 ];
 
 const AddBlogPage: React.FC = () => {
@@ -142,7 +182,7 @@ const AddBlogPage: React.FC = () => {
     type: "success" | "error" | null;
     message: string;
   }>({ type: null, message: "" });
-  
+
   // State for dynamic arrays
   const [newTag, setNewTag] = useState("");
   const [newImage, setNewImage] = useState("");
@@ -166,7 +206,7 @@ const AddBlogPage: React.FC = () => {
         avatar: "",
         bio: "",
       },
-      publishedAt: new Date().toISOString().split('T')[0],
+      publishedAt: new Date().toISOString().split("T")[0],
       readTime: 5,
       category: "",
       tags: [],
@@ -253,9 +293,9 @@ const AddBlogPage: React.FC = () => {
           message: "Blog post created successfully!",
         });
 
-        // Redirect to blog list after successful creation
+        // Redirect to public blog list after successful creation
         setTimeout(() => {
-          router.push("/admin/blog");
+          router.push("/blog");
         }, 2000);
       } else {
         throw new Error(result.error || "Failed to create blog post");
@@ -344,7 +384,10 @@ const AddBlogPage: React.FC = () => {
                           {...field}
                           fullWidth
                           label="URL Slug"
-                          helperText={errors.slug?.message || "Auto-generated from title, but you can customize it"}
+                          helperText={
+                            errors.slug?.message ||
+                            "Auto-generated from title, but you can customize it"
+                          }
                           error={!!errors.slug}
                         />
                       )}
@@ -361,7 +404,10 @@ const AddBlogPage: React.FC = () => {
                           multiline
                           rows={3}
                           error={!!errors.excerpt}
-                          helperText={errors.excerpt?.message || "Brief description shown in listings"}
+                          helperText={
+                            errors.excerpt?.message ||
+                            "Brief description shown in listings"
+                          }
                         />
                       )}
                     />
@@ -377,7 +423,10 @@ const AddBlogPage: React.FC = () => {
                           multiline
                           rows={8}
                           error={!!errors.content}
-                          helperText={errors.content?.message || "Main blog post content (HTML supported)"}
+                          helperText={
+                            errors.content?.message ||
+                            "Main blog post content (HTML supported)"
+                          }
                         />
                       )}
                     />
@@ -397,7 +446,11 @@ const AddBlogPage: React.FC = () => {
                               ))}
                             </Select>
                             {errors.category && (
-                              <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 2 }}>
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{ mt: 0.5, ml: 2 }}
+                              >
                                 {errors.category.message}
                               </Typography>
                             )}
@@ -415,7 +468,11 @@ const AddBlogPage: React.FC = () => {
                             label="Read Time (minutes)"
                             type="number"
                             InputProps={{
-                              startAdornment: <ScheduleIcon sx={{ mr: 1, color: "action.active" }} />,
+                              startAdornment: (
+                                <ScheduleIcon
+                                  sx={{ mr: 1, color: "action.active" }}
+                                />
+                              ),
                             }}
                             error={!!errors.readTime}
                             helperText={errors.readTime?.message}
@@ -515,7 +572,10 @@ const AddBlogPage: React.FC = () => {
                           fullWidth
                           label="Featured Image URL"
                           error={!!errors.featuredImage}
-                          helperText={errors.featuredImage?.message || "Main image for the blog post"}
+                          helperText={
+                            errors.featuredImage?.message ||
+                            "Main image for the blog post"
+                          }
                         />
                       )}
                     />
@@ -555,7 +615,9 @@ const AddBlogPage: React.FC = () => {
                           <Chip
                             key={index}
                             label={`Image ${index + 1}`}
-                            onDelete={() => removeItem("images", index, watchedImages)}
+                            onDelete={() =>
+                              removeItem("images", index, watchedImages)
+                            }
                             color="secondary"
                             variant="outlined"
                           />
@@ -601,17 +663,27 @@ const AddBlogPage: React.FC = () => {
                     </Stack>
 
                     {/* Preset tags */}
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 1 }}
+                    >
                       Or choose from common tags:
                     </Typography>
-                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
+                    <Box
+                      sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}
+                    >
                       {commonTags.map((tag) => (
                         <Chip
                           key={tag}
                           label={tag}
                           onClick={() => addTagFromPreset(tag)}
-                          color={watchedTags.includes(tag) ? "primary" : "default"}
-                          variant={watchedTags.includes(tag) ? "filled" : "outlined"}
+                          color={
+                            watchedTags.includes(tag) ? "primary" : "default"
+                          }
+                          variant={
+                            watchedTags.includes(tag) ? "filled" : "outlined"
+                          }
                           size="small"
                           sx={{ cursor: "pointer" }}
                         />
@@ -619,7 +691,10 @@ const AddBlogPage: React.FC = () => {
                     </Box>
 
                     {/* Selected tags */}
-                    <Typography variant="body2" sx={{ mb: 1, fontWeight: "medium" }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ mb: 1, fontWeight: "medium" }}
+                    >
                       Selected tags:
                     </Typography>
                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
@@ -627,14 +702,20 @@ const AddBlogPage: React.FC = () => {
                         <Chip
                           key={index}
                           label={tag}
-                          onDelete={() => removeItem("tags", index, watchedTags)}
+                          onDelete={() =>
+                            removeItem("tags", index, watchedTags)
+                          }
                           color="info"
                           variant="outlined"
                         />
                       ))}
                     </Box>
                     {errors.tags && (
-                      <Typography variant="caption" color="error" sx={{ mt: 1 }}>
+                      <Typography
+                        variant="caption"
+                        color="error"
+                        sx={{ mt: 1 }}
+                      >
                         {errors.tags.message}
                       </Typography>
                     )}
@@ -658,7 +739,10 @@ const AddBlogPage: React.FC = () => {
                           fullWidth
                           label="Meta Title"
                           error={!!errors.seo?.metaTitle}
-                          helperText={errors.seo?.metaTitle?.message || "Title for search engines (max 60 chars)"}
+                          helperText={
+                            errors.seo?.metaTitle?.message ||
+                            "Title for search engines (max 60 chars)"
+                          }
                         />
                       )}
                     />
@@ -674,7 +758,10 @@ const AddBlogPage: React.FC = () => {
                           multiline
                           rows={3}
                           error={!!errors.seo?.metaDescription}
-                          helperText={errors.seo?.metaDescription?.message || "Description for search engines (max 160 chars)"}
+                          helperText={
+                            errors.seo?.metaDescription?.message ||
+                            "Description for search engines (max 160 chars)"
+                          }
                         />
                       )}
                     />
@@ -693,7 +780,11 @@ const AddBlogPage: React.FC = () => {
                           onKeyPress={(e) => {
                             if (e.key === "Enter") {
                               e.preventDefault();
-                              addItem("seo.keywords", newKeyword, watchedKeywords);
+                              addItem(
+                                "seo.keywords",
+                                newKeyword,
+                                watchedKeywords
+                              );
                               setNewKeyword("");
                             }
                           }}
@@ -702,7 +793,11 @@ const AddBlogPage: React.FC = () => {
                           variant="contained"
                           startIcon={<AddIcon />}
                           onClick={() => {
-                            addItem("seo.keywords", newKeyword, watchedKeywords);
+                            addItem(
+                              "seo.keywords",
+                              newKeyword,
+                              watchedKeywords
+                            );
                             setNewKeyword("");
                           }}
                         >
@@ -714,7 +809,9 @@ const AddBlogPage: React.FC = () => {
                           <Chip
                             key={index}
                             label={keyword}
-                            onDelete={() => removeItem("seo.keywords", index, watchedKeywords)}
+                            onDelete={() =>
+                              removeItem("seo.keywords", index, watchedKeywords)
+                            }
                             color="success"
                             variant="outlined"
                             size="small"
@@ -722,7 +819,11 @@ const AddBlogPage: React.FC = () => {
                         ))}
                       </Box>
                       {errors.seo?.keywords && (
-                        <Typography variant="caption" color="error" sx={{ mt: 1 }}>
+                        <Typography
+                          variant="caption"
+                          color="error"
+                          sx={{ mt: 1 }}
+                        >
                           {errors.seo.keywords.message}
                         </Typography>
                       )}
@@ -775,7 +876,9 @@ const AddBlogPage: React.FC = () => {
                 </Box>
 
                 {/* Submit Button */}
-                <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
+                <Box
+                  sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}
+                >
                   <Stack direction="row" spacing={2}>
                     <Button
                       variant="outlined"
