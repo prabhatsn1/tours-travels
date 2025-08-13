@@ -1,61 +1,56 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Container,
   Typography,
   Button,
+  Stack,
   Card,
   CardContent,
-  Chip,
-  Rating,
-  Divider,
-  Paper,
-  Stack,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   TextField,
   MenuItem,
+  Divider,
+  Rating,
+  IconButton,
+  Chip,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import {
-  CheckCircle,
-  Cancel,
+  ArrowBack,
+  NavigateBefore,
+  NavigateNext,
+  LocationOn,
   AccessTime,
   Group,
   Star,
-  Share,
-  Favorite,
-  FavoriteBorder,
   CalendarToday,
-  LocationOn,
-  ExpandMore,
-  ArrowBack,
-  Phone,
-  Email,
-  WhatsApp,
-  NavigateNext,
-  NavigateBefore,
+  CheckCircle,
+  Close,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import Layout from "@/components/layout/Layout";
-import { tourPackages } from "@/data/sampleData";
+import { packageAPI } from "@/lib/api";
+import { TourPackage } from "@/types";
 
 const PackageDetailsPage: React.FC = () => {
   const params = useParams();
+  const router = useRouter();
   const packageId = params.id as string;
 
+  const [packageData, setPackageData] = useState<TourPackage | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isFavorite, setIsFavorite] = useState(false);
   const [showBookingDialog, setShowBookingDialog] = useState(false);
   const [bookingForm, setBookingForm] = useState({
     name: "",
@@ -66,18 +61,57 @@ const PackageDetailsPage: React.FC = () => {
     specialRequests: "",
   });
 
-  // Find the package by ID
-  const packageData = tourPackages.find((pkg) => pkg.id === packageId);
+  // Fetch package data
+  useEffect(() => {
+    const fetchPackage = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  if (!packageData) {
+        const response = await packageAPI.getPackageById(packageId, {
+          includeVirtuals: true,
+        });
+
+        if (response.success && response.data) {
+          setPackageData(response.data);
+        } else {
+          setError(response.error || "Package not found");
+        }
+      } catch (err) {
+        console.error("Error fetching package:", err);
+        setError("Failed to load package details");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (packageId) {
+      fetchPackage();
+    }
+  }, [packageId]);
+
+  if (loading) {
+    return (
+      <Layout>
+        <Container maxWidth="lg" sx={{ py: 8, textAlign: "center" }}>
+          <CircularProgress size={60} />
+          <Typography variant="h6" sx={{ mt: 2 }}>
+            Loading package details...
+          </Typography>
+        </Container>
+      </Layout>
+    );
+  }
+
+  if (error || !packageData) {
     return (
       <Layout>
         <Container maxWidth="lg" sx={{ py: 8, textAlign: "center" }}>
           <Typography variant="h4" gutterBottom>
-            Package Not Found
+            {error || "Package Not Found"}
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-            The requested package could not be found.
+            {error || "The requested package could not be found."}
           </Typography>
           <Button
             variant="contained"
@@ -236,639 +270,213 @@ const PackageDetailsPage: React.FC = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
             >
-              {/* Package Info Cards with Travel Animations */}
+              {/* Package Info Cards */}
               <Stack
                 direction={{ xs: "column", sm: "row" }}
                 spacing={2}
                 sx={{ mb: 4 }}
               >
-                <motion.div
-                  initial={{ opacity: 0, y: 30, scale: 0.8 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.5, delay: 0.1 }}
-                  whileHover={{ scale: 1.05, y: -5 }}
-                  style={{ flex: 1 }}
-                >
-                  <Paper
-                    sx={{
-                      p: 3,
-                      textAlign: "center",
-                      background:
-                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                      color: "white",
-                      borderRadius: 3,
-                      position: "relative",
-                      overflow: "hidden",
-                      "&::before": {
-                        content: '""',
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background:
-                          'url(\'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="40" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="80" r="1.5" fill="rgba(255,255,255,0.1)"/></svg>\')',
-                      },
-                    }}
-                  >
-                    <AccessTime
-                      sx={{
-                        fontSize: 40,
-                        mb: 1,
-                        filter: "drop-shadow(2px 2px 4px rgba(0,0,0,0.3))",
-                      }}
-                    />
-                    <Typography variant="body2" sx={{ opacity: 0.9, mb: 1 }}>
-                      Duration
-                    </Typography>
-                    <Typography variant="h5" fontWeight="bold">
-                      {packageData.duration}
-                    </Typography>
-                  </Paper>
-                </motion.div>
+                <Card sx={{ flex: 1, p: 2, textAlign: "center" }}>
+                  <AccessTime
+                    sx={{ fontSize: 40, mb: 1, color: "primary.main" }}
+                  />
+                  <Typography variant="h6" fontWeight="bold">
+                    Duration
+                  </Typography>
+                  <Typography variant="body2">
+                    {packageData.duration}
+                  </Typography>
+                </Card>
 
-                <motion.div
-                  initial={{ opacity: 0, y: 30, scale: 0.8 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                  whileHover={{ scale: 1.05, y: -5 }}
-                  style={{ flex: 1 }}
-                >
-                  <Paper
-                    sx={{
-                      p: 3,
-                      textAlign: "center",
-                      background:
-                        "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-                      color: "white",
-                      borderRadius: 3,
-                      position: "relative",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <Group
-                      sx={{
-                        fontSize: 40,
-                        mb: 1,
-                        filter: "drop-shadow(2px 2px 4px rgba(0,0,0,0.3))",
-                      }}
-                    />
-                    <Typography variant="body2" sx={{ opacity: 0.9, mb: 1 }}>
-                      Group Size
-                    </Typography>
-                    <Typography variant="h5" fontWeight="bold">
-                      {packageData.groupSize.min}-{packageData.groupSize.max}
-                    </Typography>
-                  </Paper>
-                </motion.div>
+                <Card sx={{ flex: 1, p: 2, textAlign: "center" }}>
+                  <Group sx={{ fontSize: 40, mb: 1, color: "primary.main" }} />
+                  <Typography variant="h6" fontWeight="bold">
+                    Group Size
+                  </Typography>
+                  <Typography variant="body2">
+                    {packageData.groupSize.min}-{packageData.groupSize.max}{" "}
+                    people
+                  </Typography>
+                </Card>
 
-                <motion.div
-                  initial={{ opacity: 0, y: 30, scale: 0.8 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
-                  whileHover={{ scale: 1.05, y: -5 }}
-                  style={{ flex: 1 }}
-                >
-                  <Paper
-                    sx={{
-                      p: 3,
-                      textAlign: "center",
-                      background:
-                        "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-                      color: "white",
-                      borderRadius: 3,
-                      position: "relative",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <Star
-                      sx={{
-                        fontSize: 40,
-                        mb: 1,
-                        filter: "drop-shadow(2px 2px 4px rgba(0,0,0,0.3))",
-                      }}
-                    />
-                    <Typography variant="body2" sx={{ opacity: 0.9, mb: 1 }}>
-                      Difficulty
-                    </Typography>
-                    <Typography variant="h5" fontWeight="bold">
-                      {packageData.difficulty}
-                    </Typography>
-                  </Paper>
-                </motion.div>
+                <Card sx={{ flex: 1, p: 2, textAlign: "center" }}>
+                  <Star sx={{ fontSize: 40, mb: 1, color: "primary.main" }} />
+                  <Typography variant="h6" fontWeight="bold">
+                    Difficulty
+                  </Typography>
+                  <Typography variant="body2">
+                    {packageData.difficulty}
+                  </Typography>
+                </Card>
 
-                <motion.div
-                  initial={{ opacity: 0, y: 30, scale: 0.8 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.5, delay: 0.4 }}
-                  whileHover={{ scale: 1.05, y: -5 }}
-                  style={{ flex: 1 }}
-                >
-                  <Paper
-                    sx={{
-                      p: 3,
-                      textAlign: "center",
-                      background:
-                        "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
-                      color: "white",
-                      borderRadius: 3,
-                      position: "relative",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <CalendarToday
-                      sx={{
-                        fontSize: 40,
-                        mb: 1,
-                        filter: "drop-shadow(2px 2px 4px rgba(0,0,0,0.3))",
-                      }}
-                    />
-                    <Typography variant="body2" sx={{ opacity: 0.9, mb: 1 }}>
-                      Next Date
-                    </Typography>
-                    <Typography variant="h6" fontWeight="bold" fontSize="14px">
-                      {new Date(packageData.departureDate).toLocaleDateString()}
-                    </Typography>
-                  </Paper>
-                </motion.div>
+                <Card sx={{ flex: 1, p: 2, textAlign: "center" }}>
+                  <CalendarToday
+                    sx={{ fontSize: 40, mb: 1, color: "primary.main" }}
+                  />
+                  <Typography variant="h6" fontWeight="bold">
+                    Next Departure
+                  </Typography>
+                  <Typography variant="body2">
+                    {new Date(packageData.departureDate).toLocaleDateString()}
+                  </Typography>
+                </Card>
               </Stack>
 
-              {/* Description with Travel Animation */}
-              <motion.div
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                whileHover={{ scale: 1.02 }}
-              >
-                <Card
-                  sx={{
-                    mb: 4,
-                    borderRadius: 3,
-                    background:
-                      "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
-                    boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
-                    border: "1px solid rgba(255,255,255,0.2)",
-                    position: "relative",
-                    overflow: "hidden",
-                    "&::before": {
-                      content: '""',
-                      position: "absolute",
-                      top: "-50%",
-                      right: "-50%",
-                      width: "100%",
-                      height: "100%",
-                      background:
-                        "radial-gradient(circle, rgba(102,126,234,0.1) 0%, transparent 70%)",
-                      animation: "float 6s ease-in-out infinite",
-                    },
-                    "@keyframes float": {
-                      "0%, 100%": { transform: "translate(0, 0) rotate(0deg)" },
-                      "33%": {
-                        transform: "translate(30px, -30px) rotate(120deg)",
-                      },
-                      "66%": {
-                        transform: "translate(-20px, 20px) rotate(240deg)",
-                      },
-                    },
-                  }}
-                >
-                  <CardContent sx={{ position: "relative", zIndex: 1 }}>
-                    <Stack
-                      direction="row"
-                      alignItems="center"
-                      spacing={2}
-                      sx={{ mb: 2 }}
-                    >
-                      <Typography
-                        variant="h5"
-                        fontWeight="bold"
-                        color="primary"
-                      >
-                        Package Overview
-                      </Typography>
-                    </Stack>
-                    <Typography
-                      variant="body1"
-                      color="text.secondary"
-                      paragraph
-                      sx={{ lineHeight: 1.8 }}
-                    >
-                      {packageData.description}
-                    </Typography>
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Chip
-                        label={packageData.category}
-                        color="primary"
-                        variant="outlined"
-                        sx={{
-                          borderRadius: 3,
-                          fontWeight: "bold",
-                          background:
-                            "linear-gradient(45deg, #667eea 30%, #764ba2 90%)",
-                          color: "white",
-                          border: "none",
-                        }}
-                      />
-                    </motion.div>
-                  </CardContent>
-                </Card>
-              </motion.div>
+              {/* Description */}
+              <Card sx={{ mb: 4 }}>
+                <CardContent>
+                  <Typography variant="h5" gutterBottom fontWeight="bold">
+                    Description
+                  </Typography>
+                  <Typography variant="body1" paragraph>
+                    {packageData.description}
+                  </Typography>
+                </CardContent>
+              </Card>
 
-              {/* Highlights with Staggered Animation */}
-              <motion.div
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-              >
-                <Card
-                  sx={{
-                    mb: 4,
-                    borderRadius: 3,
-                    background:
-                      "linear-gradient(145deg, #fff 0%, #f0f8ff 100%)",
-                    boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
-                  }}
-                >
-                  <CardContent>
-                    <Stack
-                      direction="row"
-                      alignItems="center"
-                      spacing={2}
-                      sx={{ mb: 3 }}
-                    >
-                      <Typography
-                        variant="h5"
-                        fontWeight="bold"
-                        color="primary"
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+              {/* Highlights */}
+              <Card sx={{ mb: 4 }}>
+                <CardContent>
+                  <Typography variant="h5" gutterBottom fontWeight="bold">
+                    Package Highlights
+                  </Typography>
+                  <Stack spacing={1}>
+                    {packageData.highlights.map((highlight, index) => (
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        alignItems="center"
+                        key={index}
                       >
-                        Tour Highlights
-                      </Typography>
-                    </Stack>
-                    <Stack spacing={2}>
-                      {packageData.highlights.map((highlight, index) => (
-                        <motion.div
-                          key={index}
-                          initial={{ opacity: 0, x: -30 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.5, delay: 0.1 * index }}
-                          whileHover={{ x: 10, scale: 1.02 }}
-                        >
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              p: 2,
-                              borderRadius: 2,
-                              background:
-                                "linear-gradient(90deg, rgba(102,126,234,0.1) 0%, rgba(255,255,255,0.5) 100%)",
-                              border: "1px solid rgba(102,126,234,0.2)",
-                              transition: "all 0.3s ease",
-                            }}
-                          >
-                            <CheckCircle
-                              color="success"
-                              sx={{ mr: 2, fontSize: 24 }}
-                            />
-                            <Typography variant="body1" fontWeight="medium">
-                              {highlight}
-                            </Typography>
-                          </Box>
-                        </motion.div>
-                      ))}
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </motion.div>
+                        <CheckCircle color="success" fontSize="small" />
+                        <Typography variant="body1">{highlight}</Typography>
+                      </Stack>
+                    ))}
+                  </Stack>
+                </CardContent>
+              </Card>
 
-              {/* Itinerary with Travel-themed Animations */}
-              <motion.div
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.5 }}
-              >
-                <Card
-                  sx={{
-                    mb: 4,
-                    borderRadius: 3,
-                    background:
-                      "linear-gradient(145deg, #fff 0%, #f5f7fa 100%)",
-                    boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
-                  }}
-                >
-                  <CardContent>
-                    <Stack
-                      direction="row"
-                      alignItems="center"
-                      spacing={2}
-                      sx={{ mb: 3 }}
-                    >
-                      <Typography
-                        variant="h5"
-                        fontWeight="bold"
-                        color="primary"
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        Detailed Itinerary
-                      </Typography>
-                    </Stack>
-                    <Stack spacing={2}>
-                      {packageData.itinerary.map((day, index) => (
-                        <motion.div
-                          key={index}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.5, delay: 0.1 * index }}
-                          whileHover={{ scale: 1.02 }}
-                        >
-                          <Accordion
-                            sx={{
-                              borderRadius: 2,
-                              background:
-                                "linear-gradient(90deg, rgba(102,126,234,0.05) 0%, rgba(255,255,255,0.8) 100%)",
-                              "&:before": { display: "none" },
-                              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                            }}
-                          >
-                            <AccordionSummary
-                              expandIcon={
-                                <motion.div
-                                  whileHover={{ rotate: 180 }}
-                                  transition={{ duration: 0.3 }}
-                                >
-                                  <ExpandMore />
-                                </motion.div>
-                              }
-                              sx={{
-                                background:
-                                  "linear-gradient(90deg, rgba(102,126,234,0.1) 0%, transparent 100%)",
-                                borderRadius: 2,
-                              }}
-                            >
+              {/* Itinerary */}
+              <Card sx={{ mb: 4 }}>
+                <CardContent>
+                  <Typography variant="h5" gutterBottom fontWeight="bold">
+                    Detailed Itinerary
+                  </Typography>
+                  <Stack spacing={3}>
+                    {packageData.itinerary.map((day, index) => (
+                      <Card key={index} variant="outlined">
+                        <CardContent>
+                          <Typography variant="h6" gutterBottom color="primary">
+                            Day {day.day}: {day.title}
+                          </Typography>
+                          <Typography variant="body1" paragraph>
+                            {day.description}
+                          </Typography>
+
+                          {day.activities.length > 0 && (
+                            <Box sx={{ mb: 2 }}>
+                              <Typography variant="subtitle2" gutterBottom>
+                                Activities:
+                              </Typography>
                               <Stack
                                 direction="row"
-                                alignItems="center"
-                                spacing={2}
+                                spacing={1}
+                                flexWrap="wrap"
                               >
-                                <motion.div
-                                  animate={{ scale: [1, 1.1, 1] }}
-                                  transition={{
-                                    duration: 2,
-                                    repeat: Infinity,
-                                    ease: "easeInOut",
-                                    delay: index * 0.2,
-                                  }}
-                                >
-                                  <Typography
-                                    variant="h6"
-                                    sx={{
-                                      background:
-                                        "linear-gradient(45deg, #667eea, #764ba2)",
-                                      WebkitBackgroundClip: "text",
-                                      WebkitTextFillColor: "transparent",
-                                      fontWeight: "bold",
-                                    }}
-                                  >
-                                    Day {day.day}: {day.title}
-                                  </Typography>
-                                </motion.div>
-                              </Stack>
-                            </AccordionSummary>
-                            <AccordionDetails
-                              sx={{ background: "rgba(255,255,255,0.8)" }}
-                            >
-                              <Typography
-                                variant="body1"
-                                color="text.secondary"
-                                paragraph
-                                sx={{ lineHeight: 1.7 }}
-                              >
-                                {day.description}
-                              </Typography>
-                              <Typography
-                                variant="subtitle2"
-                                gutterBottom
-                                color="primary"
-                                fontWeight="bold"
-                              >
-                                🎯 Activities:
-                              </Typography>
-                              <Stack spacing={1} sx={{ mb: 2 }}>
-                                {day.activities.map((activity, idx) => (
-                                  <motion.div
-                                    key={idx}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{
-                                      duration: 0.3,
-                                      delay: idx * 0.1,
-                                    }}
-                                    whileHover={{ x: 5 }}
-                                  >
-                                    <Box
-                                      sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        p: 1,
-                                      }}
-                                    >
-                                      <CheckCircle
-                                        color="primary"
-                                        sx={{ fontSize: 18, mr: 1 }}
-                                      />
-                                      <Typography variant="body2">
-                                        {activity}
-                                      </Typography>
-                                    </Box>
-                                  </motion.div>
+                                {day.activities.map((activity, actIndex) => (
+                                  <Chip
+                                    key={actIndex}
+                                    label={activity}
+                                    size="small"
+                                    variant="outlined"
+                                    color="primary"
+                                  />
                                 ))}
                               </Stack>
-                              {day.meals.length > 0 && (
-                                <Typography
-                                  variant="subtitle2"
-                                  gutterBottom
-                                  sx={{ mt: 2 }}
-                                  color="secondary"
-                                >
-                                  🍽️ Meals: {day.meals.join(", ")}
-                                </Typography>
-                              )}
-                              {day.accommodation && (
-                                <Typography
-                                  variant="subtitle2"
-                                  sx={{ mt: 1 }}
-                                  color="secondary"
-                                >
-                                  🏨 Accommodation: {day.accommodation}
-                                </Typography>
-                              )}
-                            </AccordionDetails>
-                          </Accordion>
-                        </motion.div>
+                            </Box>
+                          )}
+
+                          {day.meals.length > 0 && (
+                            <Box sx={{ mb: 2 }}>
+                              <Typography variant="subtitle2" gutterBottom>
+                                Meals:
+                              </Typography>
+                              <Typography variant="body2">
+                                {day.meals.join(", ")}
+                              </Typography>
+                            </Box>
+                          )}
+
+                          {day.accommodation && (
+                            <Box>
+                              <Typography variant="subtitle2" gutterBottom>
+                                Accommodation:
+                              </Typography>
+                              <Typography variant="body2">
+                                {day.accommodation}
+                              </Typography>
+                            </Box>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </Stack>
+                </CardContent>
+              </Card>
+
+              {/* Inclusions & Exclusions */}
+              <Stack direction={{ xs: "column", md: "row" }} spacing={3}>
+                <Card sx={{ flex: 1 }}>
+                  <CardContent>
+                    <Typography
+                      variant="h6"
+                      gutterBottom
+                      color="success.main"
+                      fontWeight="bold"
+                    >
+                      Included
+                    </Typography>
+                    <Stack spacing={1}>
+                      {packageData.inclusions.map((inclusion, index) => (
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          alignItems="center"
+                          key={index}
+                        >
+                          <CheckCircle color="success" fontSize="small" />
+                          <Typography variant="body2">{inclusion}</Typography>
+                        </Stack>
                       ))}
                     </Stack>
                   </CardContent>
                 </Card>
-              </motion.div>
 
-              {/* Inclusions & Exclusions with Travel Theme */}
-              <Stack direction={{ xs: "column", md: "row" }} spacing={3}>
-                <motion.div
-                  initial={{ opacity: 0, x: -50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.6, delay: 0.6 }}
-                  whileHover={{ scale: 1.02 }}
-                  style={{ flex: 1 }}
-                >
-                  <Card
-                    sx={{
-                      height: "100%",
-                      borderRadius: 3,
-                      background:
-                        "linear-gradient(145deg, #e8f5e8 0%, #f0fff0 100%)",
-                      border: "2px solid rgba(76, 175, 80, 0.2)",
-                      position: "relative",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <CardContent>
-                      <Stack
-                        direction="row"
-                        alignItems="center"
-                        spacing={2}
-                        sx={{ mb: 2 }}
-                      >
-                        <motion.div
-                          animate={{ rotate: [0, 10, -10, 0] }}
-                          transition={{
-                            duration: 2,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                          }}
+                <Card sx={{ flex: 1 }}>
+                  <CardContent>
+                    <Typography
+                      variant="h6"
+                      gutterBottom
+                      color="error.main"
+                      fontWeight="bold"
+                    >
+                      Not Included
+                    </Typography>
+                    <Stack spacing={1}>
+                      {packageData.exclusions.map((exclusion, index) => (
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          alignItems="center"
+                          key={index}
                         >
-                          ✅
-                        </motion.div>
-                        <Typography
-                          variant="h6"
-                          fontWeight="bold"
-                          color="success.main"
-                        >
-                          What&apos;s Included
-                        </Typography>
-                      </Stack>
-                      <Stack spacing={1}>
-                        {packageData.inclusions.map((item, index) => (
-                          <motion.div
-                            key={index}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.4, delay: index * 0.1 }}
-                            whileHover={{ x: 5, scale: 1.02 }}
-                          >
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                p: 1,
-                              }}
-                            >
-                              <CheckCircle
-                                color="success"
-                                sx={{ fontSize: 20, mr: 1.5 }}
-                              />
-                              <Typography
-                                variant="body2"
-                                sx={{ fontWeight: "medium" }}
-                              >
-                                {item}
-                              </Typography>
-                            </Box>
-                          </motion.div>
-                        ))}
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, x: 50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.6, delay: 0.7 }}
-                  whileHover={{ scale: 1.02 }}
-                  style={{ flex: 1 }}
-                >
-                  <Card
-                    sx={{
-                      height: "100%",
-                      borderRadius: 3,
-                      background:
-                        "linear-gradient(145deg, #ffe8e8 0%, #fff0f0 100%)",
-                      border: "2px solid rgba(244, 67, 54, 0.2)",
-                      position: "relative",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <CardContent>
-                      <Stack
-                        direction="row"
-                        alignItems="center"
-                        spacing={2}
-                        sx={{ mb: 2 }}
-                      >
-                        <motion.div
-                          animate={{ scale: [1, 1.1, 1] }}
-                          transition={{
-                            duration: 2,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                          }}
-                        >
-                          ❌
-                        </motion.div>
-                        <Typography
-                          variant="h6"
-                          fontWeight="bold"
-                          color="error.main"
-                        >
-                          What&apos;s Not Included
-                        </Typography>
-                      </Stack>
-                      <Stack spacing={1}>
-                        {packageData.exclusions.map((item, index) => (
-                          <motion.div
-                            key={index}
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.4, delay: index * 0.1 }}
-                            whileHover={{ x: -5, scale: 1.02 }}
-                          >
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                p: 1,
-                              }}
-                            >
-                              <Cancel
-                                color="error"
-                                sx={{ fontSize: 20, mr: 1.5 }}
-                              />
-                              <Typography
-                                variant="body2"
-                                sx={{ fontWeight: "medium" }}
-                              >
-                                {item}
-                              </Typography>
-                            </Box>
-                          </motion.div>
-                        ))}
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </motion.div>
+                          <Close color="error" fontSize="small" />
+                          <Typography variant="body2">{exclusion}</Typography>
+                        </Stack>
+                      ))}
+                    </Stack>
+                  </CardContent>
+                </Card>
               </Stack>
             </motion.div>
           </Box>
@@ -880,228 +488,78 @@ const PackageDetailsPage: React.FC = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              {/* Pricing Card with Travel Animation */}
-              <motion.div
-                whileHover={{ scale: 1.02, y: -5 }}
-                transition={{ duration: 0.3 }}
+              {/* Pricing Card */}
+              <Card
+                sx={{
+                  position: "sticky",
+                  top: 24,
+                  mb: 3,
+                  background:
+                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  color: "white",
+                }}
               >
-                <Card
-                  sx={{
-                    position: "sticky",
-                    top: 24,
-                    mb: 3,
-                    borderRadius: 4,
-                    background:
-                      "linear-gradient(145deg, #667eea 0%, #764ba2 100%)",
-                    color: "white",
-                    boxShadow: "0 20px 40px rgba(102,126,234,0.3)",
-                    overflow: "hidden",
-                    "&::before": {
-                      content: '""',
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      background:
-                        'url(\'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M20,20 Q40,5 60,20 T100,20" stroke="rgba(255,255,255,0.1)" fill="none"/><circle cx="80" cy="80" r="15" fill="rgba(255,255,255,0.05)"/></svg>\')',
-                    },
-                  }}
-                >
-                  <CardContent sx={{ position: "relative", zIndex: 1 }}>
-                    <Box sx={{ textAlign: "center", mb: 3 }}>
-                      <motion.div
-                        animate={{ scale: [1, 1.05, 1] }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
-                      >
+                <CardContent>
+                  <Typography variant="h4" fontWeight="bold" gutterBottom>
+                    ${packageData.price}
+                    {packageData.originalPrice &&
+                      packageData.originalPrice > packageData.price && (
                         <Typography
-                          variant="h3"
-                          fontWeight="bold"
-                          sx={{ mb: 1 }}
-                        >
-                          ${packageData.price}
-                        </Typography>
-                      </motion.div>
-                      {packageData.originalPrice && (
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.5 }}
-                        >
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              textDecoration: "line-through",
-                              opacity: 0.7,
-                              mb: 1,
-                            }}
-                          >
-                            ${packageData.originalPrice}
-                          </Typography>
-                        </motion.div>
-                      )}
-                      <Typography variant="body1" sx={{ opacity: 0.9 }}>
-                        per person
-                      </Typography>
-                    </Box>
-
-                    <Stack spacing={2}>
-                      <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Button
-                          variant="contained"
-                          size="large"
-                          fullWidth
-                          onClick={() => setShowBookingDialog(true)}
+                          component="span"
+                          variant="h6"
                           sx={{
-                            py: 2,
-                            background:
-                              "linear-gradient(45deg, #FF6B6B 30%, #FF8E53 90%)",
-                            boxShadow: "0 8px 16px rgba(255,107,107,0.3)",
-                            fontSize: "1.1rem",
-                            fontWeight: "bold",
-                            "&:hover": {
-                              background:
-                                "linear-gradient(45deg, #FF5252 30%, #FF7043 90%)",
-                              boxShadow: "0 12px 20px rgba(255,107,107,0.4)",
-                            },
+                            textDecoration: "line-through",
+                            ml: 2,
+                            opacity: 0.7,
                           }}
                         >
-                          🎒 Book Your Adventure
-                        </Button>
-                      </motion.div>
+                          ${packageData.originalPrice}
+                        </Typography>
+                      )}
+                  </Typography>
+                  <Typography variant="body1" sx={{ opacity: 0.9, mb: 3 }}>
+                    per person
+                  </Typography>
 
-                      <Stack direction="row" justifyContent="space-around">
-                        <motion.div
-                          whileHover={{ scale: 1.2, rotate: 10 }}
-                          whileTap={{ scale: 0.9 }}
-                        >
-                          <IconButton
-                            onClick={() => setIsFavorite(!isFavorite)}
-                            sx={{
-                              color: isFavorite
-                                ? "#FF6B6B"
-                                : "rgba(255,255,255,0.7)",
-                              bgcolor: "rgba(255,255,255,0.1)",
-                              "&:hover": { bgcolor: "rgba(255,255,255,0.2)" },
-                            }}
-                          >
-                            {isFavorite ? <Favorite /> : <FavoriteBorder />}
-                          </IconButton>
-                        </motion.div>
-                        <motion.div
-                          whileHover={{ scale: 1.2, rotate: -10 }}
-                          whileTap={{ scale: 0.9 }}
-                        >
-                          <IconButton
-                            sx={{
-                              color: "rgba(255,255,255,0.7)",
-                              bgcolor: "rgba(255,255,255,0.1)",
-                              "&:hover": { bgcolor: "rgba(255,255,255,0.2)" },
-                            }}
-                          >
-                            <Share />
-                          </IconButton>
-                        </motion.div>
+                  <Divider sx={{ my: 3, bgcolor: "rgba(255,255,255,0.2)" }} />
+
+                  <Stack spacing={2} sx={{ mb: 3 }}>
+                    <Box>
+                      <Typography variant="subtitle2" gutterBottom>
+                        Available Dates:
+                      </Typography>
+                      <Stack spacing={1}>
+                        {packageData.availableDates
+                          .slice(0, 3)
+                          .map((date, index) => (
+                            <Typography key={index} variant="body2">
+                              {new Date(date).toLocaleDateString()}
+                            </Typography>
+                          ))}
+                        {packageData.availableDates.length > 3 && (
+                          <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                            +{packageData.availableDates.length - 3} more dates
+                          </Typography>
+                        )}
                       </Stack>
-                    </Stack>
+                    </Box>
+                  </Stack>
 
-                    <Divider sx={{ my: 3, bgcolor: "rgba(255,255,255,0.2)" }} />
-
-                    <Typography
-                      variant="h6"
-                      gutterBottom
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        fontWeight: "medium",
-                      }}
-                    >
-                      📅 Available Dates
-                    </Typography>
-                    <Stack spacing={1}>
-                      {packageData.availableDates.map((date, index) => (
-                        <motion.div
-                          key={index}
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.3, delay: index * 0.1 }}
-                          whileHover={{ scale: 1.05 }}
-                        >
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            startIcon={<CalendarToday />}
-                            fullWidth
-                            sx={{
-                              color: "white",
-                              borderColor: "rgba(255,255,255,0.3)",
-                              "&:hover": {
-                                borderColor: "rgba(255,255,255,0.6)",
-                                bgcolor: "rgba(255,255,255,0.1)",
-                              },
-                            }}
-                          >
-                            {new Date(date).toLocaleDateString()}
-                          </Button>
-                        </motion.div>
-                      ))}
-                    </Stack>
-
-                    <Divider sx={{ my: 3, bgcolor: "rgba(255,255,255,0.2)" }} />
-
-                    <Typography
-                      variant="h6"
-                      gutterBottom
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        fontWeight: "medium",
-                      }}
-                    >
-                      🆘 Need Help?
-                    </Typography>
-                    <Stack spacing={1}>
-                      {[
-                        { icon: <Phone />, label: "Call Us", emoji: "📞" },
-                        { icon: <WhatsApp />, label: "WhatsApp", emoji: "💬" },
-                        { icon: <Email />, label: "Email Us", emoji: "✉️" },
-                      ].map((item, index) => (
-                        <motion.div
-                          key={index}
-                          whileHover={{ scale: 1.05, x: 5 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <Button
-                            startIcon={item.icon}
-                            variant="outlined"
-                            size="small"
-                            fullWidth
-                            sx={{
-                              color: "white",
-                              borderColor: "rgba(255,255,255,0.3)",
-                              "&:hover": {
-                                borderColor: "rgba(255,255,255,0.6)",
-                                bgcolor: "rgba(255,255,255,0.1)",
-                              },
-                            }}
-                          >
-                            {item.emoji} {item.label}
-                          </Button>
-                        </motion.div>
-                      ))}
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </motion.div>
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    size="large"
+                    sx={{
+                      bgcolor: "white",
+                      color: "primary.main",
+                      "&:hover": { bgcolor: "grey.100" },
+                    }}
+                    onClick={() => setShowBookingDialog(true)}
+                  >
+                    Book Now
+                  </Button>
+                </CardContent>
+              </Card>
             </motion.div>
           </Box>
         </Stack>
