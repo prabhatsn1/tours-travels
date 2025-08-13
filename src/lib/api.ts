@@ -135,25 +135,54 @@ export const packageAPI = {
     }
   },
 
-  // Get package by ID
-  getPackageById: async (id: string): Promise<ApiResponse<TourPackage>> => {
+  // Get package by ID with options
+  getPackageById: async (
+    id: string,
+    options?: {
+      fields?: string;
+      includeVirtuals?: boolean;
+    }
+  ): Promise<ApiResponse<TourPackage>> => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/packages/${id}`);
+      const queryParams = new URLSearchParams();
+
+      if (options?.fields) {
+        queryParams.append("fields", options.fields);
+      }
+      if (options?.includeVirtuals) {
+        queryParams.append("includeVirtuals", "true");
+      }
+
+      const url = `${API_BASE_URL}/packages/${id}${
+        queryParams.toString() ? "?" + queryParams.toString() : ""
+      }`;
+
+      const response = await axios.get(url);
       return response.data;
     } catch (error) {
       console.error("Error fetching package:", error);
       if (axios.isAxiosError(error) && error.response) {
         const status = error.response.status;
         if (status === 404) {
-          throw new Error("Package not found");
+          return {
+            success: false,
+            error: "Package not found",
+          };
         } else if (status === 400) {
-          throw new Error("Invalid package ID");
+          return {
+            success: false,
+            error: error.response.data?.error || "Invalid package ID",
+          };
         }
-        throw new Error(
-          error.response.data?.error || "Failed to fetch package"
-        );
+        return {
+          success: false,
+          error: error.response.data?.error || "Failed to fetch package",
+        };
       }
-      throw new Error("Failed to fetch package");
+      return {
+        success: false,
+        error: "Failed to fetch package",
+      };
     }
   },
 
