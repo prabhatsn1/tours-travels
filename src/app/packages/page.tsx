@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
@@ -46,83 +47,77 @@ const PackagesPage: React.FC = () => {
   const [budgetFilter, setBudgetFilter] = useState("");
   const [sortBy, setSortBy] = useState("name");
 
-  // Fetch packages on component mount
-  useEffect(() => {
-    const fetchPackages = async () => {
-      try {
-        setLoading(true);
-        const response = await packageAPI.getAllPackages();
-        if (response.success && response.data) {
-          setPackages(response.data);
-        } else {
-          setError("Failed to load packages");
-        }
-      } catch (err) {
-        console.error("Error fetching packages:", err);
-        setError("Failed to load packages");
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Fetch packages with filters
+  const fetchPackages = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-    fetchPackages();
-  }, []);
+      // Build query parameters
+      const params: any = {};
 
-  const filteredPackages = useMemo(() => {
-    const filtered = packages.filter((pkg) => {
-      const matchesSearch =
-        pkg.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        pkg.destination.toLowerCase().includes(searchTerm.toLowerCase());
+      if (searchTerm) params.search = searchTerm;
+      if (categoryFilter && categoryFilter !== "All")
+        params.category = categoryFilter;
+      if (difficultyFilter && difficultyFilter !== "All")
+        params.difficulty = difficultyFilter;
 
-      const matchesCategory =
-        !categoryFilter ||
-        categoryFilter === "All" ||
-        pkg.category === categoryFilter;
-      const matchesDifficulty =
-        !difficultyFilter ||
-        difficultyFilter === "All" ||
-        pkg.difficulty === difficultyFilter;
-
-      let matchesBudget = true;
+      // Budget filter
       if (budgetFilter) {
         const range = budgetRanges.find((r) => r.value === budgetFilter);
-        if (range && range.min !== undefined && range.max !== undefined) {
-          matchesBudget = pkg.price >= range.min && pkg.price <= range.max;
-        }
+        if (range && range.min !== undefined) params.minPrice = range.min;
+        if (range && range.max !== undefined && range.max !== Infinity)
+          params.maxPrice = range.max;
       }
 
-      return (
-        matchesSearch && matchesCategory && matchesDifficulty && matchesBudget
-      );
-    });
-
-    // Sort packages
-    return filtered.sort((a, b) => {
+      // Sorting
       switch (sortBy) {
         case "price-low":
-          return a.price - b.price;
+          params.sortBy = "price";
+          params.sortOrder = "asc";
+          break;
         case "price-high":
-          return b.price - a.price;
+          params.sortBy = "price";
+          params.sortOrder = "desc";
+          break;
         case "rating":
-          return b.rating - a.rating;
+          params.sortBy = "rating";
+          params.sortOrder = "desc";
+          break;
         case "duration":
-          // Convert duration strings to numbers for comparison (extract first number)
-          const aDuration = parseInt(a.duration.match(/\d+/)?.[0] || "0");
-          const bDuration = parseInt(b.duration.match(/\d+/)?.[0] || "0");
-          return aDuration - bDuration;
-        case "name":
+          params.sortBy = "duration";
+          params.sortOrder = "asc";
+          break;
         default:
-          return a.title.localeCompare(b.title);
+          params.sortBy = "title";
+          params.sortOrder = "asc";
+          break;
       }
-    });
-  }, [
-    packages,
-    searchTerm,
-    categoryFilter,
-    difficultyFilter,
-    budgetFilter,
-    sortBy,
-  ]);
+
+      const response = await packageAPI.getAllPackages(params);
+
+      if (response.success && response.data) {
+        setPackages(response.data);
+      } else {
+        setError(response.error || "Failed to load packages");
+      }
+    } catch (err) {
+      console.error("Error fetching packages:", err);
+      setError("Failed to load packages");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch packages when filters change
+  useEffect(() => {
+    fetchPackages();
+  }, [searchTerm, categoryFilter, difficultyFilter, budgetFilter, sortBy]);
+
+  // Remove the client-side filtering since we're doing server-side filtering
+  const filteredPackages = useMemo(() => {
+    return packages; // Server already filtered the results
+  }, [packages]);
 
   return (
     <Layout>

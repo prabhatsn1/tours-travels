@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Box,
   Container,
@@ -15,21 +15,70 @@ import {
   Stack,
   CircularProgress,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Tabs,
+  Tab,
+  Rating,
+  Divider,
 } from "@mui/material";
-import { Search, Star, LocationOn } from "@mui/icons-material";
+import {
+  Search,
+  Star,
+  LocationOn,
+  Schedule,
+  Group,
+  AttachMoney,
+  Close,
+  CalendarMonth,
+  CheckCircle,
+} from "@mui/icons-material";
 import { motion } from "framer-motion";
 import Layout from "@/components/layout/Layout";
 import { getDestinations } from "@/lib/api";
-import { Destination } from "@/types";
+import { packageAPI } from "@/lib/api";
+import { Destination, TourPackage } from "@/types";
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`destination-tabpanel-${index}`}
+      aria-labelledby={`destination-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+    </div>
+  );
+}
 
 const DestinationsPage: React.FC = () => {
   const [destinations, setDestinations] = useState<Destination[]>([]);
+  const [destinationPackages, setDestinationPackages] = useState<
+    Record<string, TourPackage[]>
+  >({});
   const [loading, setLoading] = useState(true);
+  const [packagesLoading, setPackagesLoading] = useState<
+    Record<string, boolean>
+  >({});
   const [error, setError] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
   const [regionFilter, setRegionFilter] = useState("");
   const [budgetFilter, setBudgetFilter] = useState("");
   const [sortBy, setSortBy] = useState("name");
+  const [selectedDestination, setSelectedDestination] =
+    useState<Destination | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedTab, setSelectedTab] = useState(0);
 
   const regions = [
     "All",
@@ -48,6 +97,36 @@ const DestinationsPage: React.FC = () => {
       { label: "Luxury ($1500+)", value: "luxury", min: 1500, max: undefined },
     ],
     []
+  );
+
+  // Fetch packages for a specific destination
+  const fetchPackagesForDestination = useCallback(
+    async (destination: string) => {
+      if (destinationPackages[destination]) return; // Already loaded
+
+      try {
+        setPackagesLoading((prev) => ({ ...prev, [destination]: true }));
+
+        const response = await packageAPI.getAllPackages({
+          search: destination,
+          limit: 10,
+          sortBy: "rating",
+          sortOrder: "desc",
+        });
+
+        if (response.success) {
+          setDestinationPackages((prev) => ({
+            ...prev,
+            [destination]: response.data || [],
+          }));
+        }
+      } catch (err) {
+        console.error(`Error fetching packages for ${destination}:`, err);
+      } finally {
+        setPackagesLoading((prev) => ({ ...prev, [destination]: false }));
+      }
+    },
+    [destinationPackages]
   );
 
   // Fetch destinations from API
@@ -106,6 +185,325 @@ const DestinationsPage: React.FC = () => {
     return destinations;
   }, [destinations]);
 
+  // Load packages when destinations are loaded
+  useEffect(() => {
+    if (destinations.length > 0) {
+      destinations.forEach((dest) => {
+        fetchPackagesForDestination(dest.name);
+      });
+    }
+  }, [destinations, fetchPackagesForDestination]);
+
+  const handleDestinationClick = (destination: Destination) => {
+    setSelectedDestination(destination);
+    setDialogOpen(true);
+    setSelectedTab(0);
+
+    // Ensure packages are loaded
+    fetchPackagesForDestination(destination.name);
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    setSelectedDestination(null);
+  };
+
+  const renderPackageCard = (pkg: TourPackage) => (
+    <Card key={pkg.id} sx={{ mb: 2, "&:hover": { boxShadow: 4 } }}>
+      <Stack direction={{ xs: "column", sm: "row" }}>
+        <CardMedia
+          component="img"
+          sx={{
+            width: { xs: "100%", sm: 200 },
+            height: { xs: 150, sm: 120 },
+            objectFit: "cover",
+          }}
+          image={pkg.images[0] || "/images/placeholder.jpg"}
+          alt={pkg.title}
+        />
+        <CardContent sx={{ flex: 1, p: 2 }}>
+          <Stack spacing={1}>
+            <Box>
+              <Typography variant="h6" fontWeight="bold" gutterBottom>
+                {pkg.title}
+              </Typography>
+              <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+                <Schedule fontSize="small" color="primary" />
+                <Typography variant="body2">{pkg.duration}</Typography>
+                <Group fontSize="small" color="primary" />
+                <Typography variant="body2">
+                  {pkg.groupSize.min}-{pkg.groupSize.max} people
+                </Typography>
+              </Stack>
+            </Box>
+
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Rating
+                value={pkg.rating}
+                precision={0.1}
+                size="small"
+                readOnly
+              />
+              <Typography variant="body2" color="text.secondary">
+                ({pkg.reviewCount} reviews)
+              </Typography>
+              <Chip
+                label={pkg.difficulty}
+                size="small"
+                color={
+                  pkg.difficulty === "Easy"
+                    ? "success"
+                    : pkg.difficulty === "Moderate"
+                    ? "warning"
+                    : "error"
+                }
+              />
+            </Stack>
+
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+              }}
+            >
+              {pkg.description}
+            </Typography>
+
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+            >
+              <Box>
+                {pkg.originalPrice && pkg.originalPrice > pkg.price && (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ textDecoration: "line-through" }}
+                  >
+                    ${pkg.originalPrice}
+                  </Typography>
+                )}
+                <Typography variant="h6" color="primary" fontWeight="bold">
+                  ${pkg.price}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  per person
+                </Typography>
+              </Box>
+              <Button variant="contained" size="small">
+                View Details
+              </Button>
+            </Stack>
+          </Stack>
+        </CardContent>
+      </Stack>
+    </Card>
+  );
+
+  const renderDestinationDetails = () => {
+    if (!selectedDestination) return null;
+
+    const packages = destinationPackages[selectedDestination.name] || [];
+    const isLoadingPackages = packagesLoading[selectedDestination.name];
+
+    return (
+      <Box>
+        <Tabs
+          value={selectedTab}
+          onChange={(_, newValue) => setSelectedTab(newValue)}
+        >
+          <Tab label="Overview" />
+          <Tab label={`Packages (${packages.length})`} />
+          <Tab label="Gallery" />
+          <Tab label="Reviews" />
+        </Tabs>
+
+        <TabPanel value={selectedTab} index={0}>
+          <Stack spacing={3}>
+            <Box>
+              <Typography variant="h4" gutterBottom fontWeight="bold">
+                {selectedDestination.name}
+              </Typography>
+              <Stack direction="row" spacing={1} alignItems="center" mb={2}>
+                <LocationOn color="primary" />
+                <Typography variant="h6">
+                  {selectedDestination.country}
+                </Typography>
+                <Chip
+                  label={selectedDestination.region}
+                  color="primary"
+                  variant="outlined"
+                />
+              </Stack>
+            </Box>
+
+            <Typography variant="body1" paragraph>
+              {selectedDestination.description}
+            </Typography>
+
+            <Box>
+              <Typography variant="h6" gutterBottom>
+                Key Highlights
+              </Typography>
+              <Stack spacing={1}>
+                {selectedDestination.highlights.map((highlight, index) => (
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    alignItems="center"
+                    key={index}
+                  >
+                    <CheckCircle color="success" fontSize="small" />
+                    <Typography variant="body2">{highlight}</Typography>
+                  </Stack>
+                ))}
+              </Stack>
+            </Box>
+
+            <Divider />
+
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={3}>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="h6" gutterBottom>
+                  Best Time to Visit
+                </Typography>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <CalendarMonth color="primary" />
+                  <Typography variant="body1">
+                    {selectedDestination.bestTimeToVisit}
+                  </Typography>
+                </Stack>
+              </Box>
+
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="h6" gutterBottom>
+                  Starting Price
+                </Typography>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <AttachMoney color="primary" />
+                  <Typography variant="h5" color="primary" fontWeight="bold">
+                    ${selectedDestination.startingPrice}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    per person
+                  </Typography>
+                </Stack>
+              </Box>
+            </Stack>
+
+            <Box>
+              <Typography variant="h6" gutterBottom>
+                Popular Tags
+              </Typography>
+              <Stack direction="row" spacing={1} flexWrap="wrap">
+                {selectedDestination.tags.map((tag, index) => (
+                  <Chip
+                    key={index}
+                    label={tag}
+                    variant="outlined"
+                    size="small"
+                  />
+                ))}
+              </Stack>
+            </Box>
+          </Stack>
+        </TabPanel>
+
+        <TabPanel value={selectedTab} index={1}>
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              Available Packages for {selectedDestination.name}
+            </Typography>
+
+            {isLoadingPackages ? (
+              <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : packages.length > 0 ? (
+              <Stack spacing={2}>{packages.map(renderPackageCard)}</Stack>
+            ) : (
+              <Box sx={{ textAlign: "center", py: 4 }}>
+                <Typography variant="h6" color="text.secondary">
+                  No packages available for this destination yet.
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Check back later for new packages!
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </TabPanel>
+
+        <TabPanel value={selectedTab} index={2}>
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              Photo Gallery
+            </Typography>
+            <Stack spacing={2}>
+              {selectedDestination.images
+                .reduce((rows: React.ReactNode[][], image, index) => {
+                  const rowIndex = Math.floor(index / 3);
+                  if (!rows[rowIndex]) rows[rowIndex] = [];
+                  rows[rowIndex].push(
+                    <Box key={index} sx={{ flex: 1, minWidth: 200 }}>
+                      <Card>
+                        <CardMedia
+                          component="img"
+                          height="200"
+                          image={image}
+                          alt={`${selectedDestination.name} ${index + 1}`}
+                          sx={{ objectFit: "cover" }}
+                        />
+                      </Card>
+                    </Box>
+                  );
+                  return rows;
+                }, [] as React.ReactNode[][])
+                .map((row, rowIndex) => (
+                  <Stack
+                    key={rowIndex}
+                    direction={{ xs: "column", sm: "row" }}
+                    spacing={2}
+                  >
+                    {row}
+                  </Stack>
+                ))}
+            </Stack>
+          </Box>
+        </TabPanel>
+
+        <TabPanel value={selectedTab} index={3}>
+          <Box>
+            <Stack direction="row" spacing={2} alignItems="center" mb={3}>
+              <Rating
+                value={selectedDestination.averageRating}
+                precision={0.1}
+                readOnly
+              />
+              <Typography variant="h6">
+                {selectedDestination.averageRating.toFixed(1)}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                ({selectedDestination.reviewCount} reviews)
+              </Typography>
+            </Stack>
+
+            <Typography variant="body1" color="text.secondary">
+              Reviews feature coming soon! In the meantime, you can contact us
+              for more information about this destination.
+            </Typography>
+          </Box>
+        </TabPanel>
+      </Box>
+    );
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -148,7 +546,7 @@ const DestinationsPage: React.FC = () => {
               Explore Destinations
             </Typography>
             <Typography variant="h5" align="center" sx={{ opacity: 0.9 }}>
-              Discover amazing places around the world
+              Discover amazing places around the world with exclusive packages
             </Typography>
           </motion.div>
         </Container>
@@ -264,7 +662,7 @@ const DestinationsPage: React.FC = () => {
                     component="img"
                     sx={{
                       width: { xs: "100%", md: 300 },
-                      height: { xs: 200, md: 250 },
+                      height: { xs: 200, md: 300 },
                       objectFit: "cover",
                     }}
                     image={destination.images[0] || "/images/placeholder.jpg"}
@@ -358,6 +756,53 @@ const DestinationsPage: React.FC = () => {
                           )}
                         </Stack>
 
+                        {/* Package Preview */}
+                        <Box sx={{ mt: 2 }}>
+                          <Typography variant="subtitle2" gutterBottom>
+                            Available Packages:
+                          </Typography>
+                          {packagesLoading[destination.name] ? (
+                            <CircularProgress size={20} />
+                          ) : (
+                            <Stack direction="row" spacing={1} flexWrap="wrap">
+                              {(destinationPackages[destination.name] || [])
+                                .slice(0, 3)
+                                .map((pkg, idx) => (
+                                  <Chip
+                                    key={idx}
+                                    label={`${pkg.title} - $${pkg.price}`}
+                                    size="small"
+                                    color="secondary"
+                                    variant="outlined"
+                                  />
+                                ))}
+                              {(destinationPackages[destination.name] || [])
+                                .length > 3 && (
+                                <Chip
+                                  label={`+${
+                                    (
+                                      destinationPackages[destination.name] ||
+                                      []
+                                    ).length - 3
+                                  } more`}
+                                  size="small"
+                                  color="secondary"
+                                />
+                              )}
+                              {(destinationPackages[destination.name] || [])
+                                .length === 0 &&
+                                !packagesLoading[destination.name] && (
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                  >
+                                    No packages available
+                                  </Typography>
+                                )}
+                            </Stack>
+                          )}
+                        </Box>
+
                         <Stack
                           direction="row"
                           justifyContent="space-between"
@@ -378,8 +823,12 @@ const DestinationsPage: React.FC = () => {
                               per person
                             </Typography>
                           </Box>
-                          <Button variant="contained" size="large">
-                            View Details
+                          <Button
+                            variant="contained"
+                            size="large"
+                            onClick={() => handleDestinationClick(destination)}
+                          >
+                            Explore Destination
                           </Button>
                         </Stack>
                       </Stack>
@@ -402,6 +851,39 @@ const DestinationsPage: React.FC = () => {
           </Box>
         )}
       </Container>
+
+      {/* Destination Details Dialog */}
+      <Dialog
+        open={dialogOpen}
+        onClose={handleCloseDialog}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{
+          sx: { height: "90vh", maxHeight: "800px" },
+        }}
+      >
+        <DialogTitle>
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Typography variant="h5" fontWeight="bold">
+              {selectedDestination?.name}
+            </Typography>
+            <Button
+              onClick={handleCloseDialog}
+              color="inherit"
+              sx={{ minWidth: "auto", p: 1 }}
+            >
+              <Close />
+            </Button>
+          </Stack>
+        </DialogTitle>
+        <DialogContent dividers sx={{ p: 0 }}>
+          {renderDestinationDetails()}
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };

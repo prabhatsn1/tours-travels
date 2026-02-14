@@ -1,23 +1,32 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import { connectWithMongoose } from "@/lib/mongodb";
 import Destination from "@/lib/models/Destination";
 import { isValidObjectId } from "mongoose";
 
 /**
- * GET /api/destinations/[id] - Get a specific destination by ID
+ * GET /api/destinations/[id] - Get a specific destination
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Connect to MongoDB
     await connectWithMongoose();
 
-    const { id } = params;
+    const { id } = await params;
 
-    // Validate MongoDB ObjectId
+    if (!id) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Destination ID is required",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate ObjectId format
     if (!isValidObjectId(id)) {
       return NextResponse.json(
         {
@@ -28,7 +37,7 @@ export async function GET(
       );
     }
 
-    // Find destination by ID
+    // Find the destination by ID
     const destination = await Destination.findById(id).lean();
 
     if (!destination) {
@@ -70,16 +79,25 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Connect to MongoDB
     await connectWithMongoose();
 
-    const { id } = params;
-    const body = await request.json();
+    const { id } = await params;
 
-    // Validate MongoDB ObjectId
+    if (!id) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Destination ID is required",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate ObjectId format
     if (!isValidObjectId(id)) {
       return NextResponse.json(
         {
@@ -90,13 +108,26 @@ export async function PUT(
       );
     }
 
-    // Update destination
-    const destination = await Destination.findByIdAndUpdate(id, body, {
-      new: true,
-      runValidators: true,
-    }).lean();
+    // Parse request body
+    const updateData = await request.json();
 
-    if (!destination) {
+    // Remove fields that shouldn't be updated directly
+    delete updateData.id;
+    delete updateData._id;
+    delete updateData.createdAt;
+    delete updateData.updatedAt;
+
+    // Find and update the destination
+    const updatedDestination = await Destination.findByIdAndUpdate(
+      id,
+      updateData,
+      {
+        new: true,
+        runValidators: true,
+      }
+    ).lean();
+
+    if (!updatedDestination) {
       return NextResponse.json(
         {
           success: false,
@@ -108,8 +139,8 @@ export async function PUT(
 
     // Transform the response
     const transformedDestination = {
-      ...destination,
-      id: destination._id.toString(),
+      ...updatedDestination,
+      id: updatedDestination._id.toString(),
       _id: undefined,
       __v: undefined,
     };
@@ -119,13 +150,16 @@ export async function PUT(
       data: transformedDestination,
       message: "Destination updated successfully",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error updating destination:", error);
 
     // Handle validation errors
-    if (error.name === "ValidationError") {
-      const validationErrors = Object.values(error.errors).map(
-        (err: any) => err.message
+    if (error instanceof Error && error.name === "ValidationError") {
+      const mongoError = error as Error & {
+        errors: Record<string, { message: string }>;
+      };
+      const validationErrors = Object.values(mongoError.errors).map(
+        (err: { message: string }) => err.message
       );
       return NextResponse.json(
         {
@@ -148,19 +182,29 @@ export async function PUT(
 }
 
 /**
- * DELETE /api/destinations/[id] - Delete a specific destination (soft delete)
+ * DELETE /api/destinations/[id] - Delete a specific destination
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Connect to MongoDB
     await connectWithMongoose();
 
-    const { id } = params;
+    const { id } = await params;
 
-    // Validate MongoDB ObjectId
+    if (!id) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Destination ID is required",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate ObjectId format
     if (!isValidObjectId(id)) {
       return NextResponse.json(
         {
@@ -171,14 +215,10 @@ export async function DELETE(
       );
     }
 
-    // Soft delete by setting isActive to false
-    const destination = await Destination.findByIdAndUpdate(
-      id,
-      { isActive: false },
-      { new: true }
-    ).lean();
+    // Find and delete the destination
+    const deletedDestination = await Destination.findByIdAndDelete(id).lean();
 
-    if (!destination) {
+    if (!deletedDestination) {
       return NextResponse.json(
         {
           success: false,
