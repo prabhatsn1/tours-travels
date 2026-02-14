@@ -1,0 +1,41 @@
+{
+  "heroTitle": "Get in Touch",
+  "heroSubtitle": "We're here to help plan your perfect journey",
+  "email": "info@wanderlusttravel.com",
+  "phone": "+1 (555) 123-4567",
+  "whatsapp": "+1 (555) 123-4567",
+  "address": {
+    "street": "123 Travel Street",
+    "city": "New York",
+    "state": "NY",
+    "country": "USA",
+    "zipCode": "10001"
+  },
+  "socialMedia": {
+    "facebook": "https://facebook.com/wanderlusttravel",
+    "instagram": "https://instagram.com/wanderlusttravel",
+    "twitter": "https://twitter.com/wanderlusttravel",
+    "youtube": "https://youtube.com/wanderlusttravel"
+  },
+  "businessHours": {
+    "weekdays": "9:00 AM - 6:00 PM",
+    "weekends": "10:00 AM - 4:00 PM"
+  },
+  "inquiryTypes": [
+    {
+      "icon": "BusinessCenter",
+      "title": "General Inquiries",
+      "description": "Questions about our services and packages"
+    },
+    {
+      "icon": "SupportAgent",
+      "title": "Customer Support",
+      "description": "Help with existing bookings"
+    },
+    {
+      "icon": "QuestionAnswer",
+      "title": "Partnership",
+      "description": "Business partnerships and collaborations"
+    }
+  ]
+}

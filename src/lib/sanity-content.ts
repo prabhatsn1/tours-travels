@@ -16,7 +16,7 @@ import {
   getContactInfoFromSanity,
   getAboutPageFromSanity,
   getHomePageFromSanity,
-} from "@/sanity/queries";
+} from "../../sanity/queries";
 
 import {
   faqs as fallbackFaqs,

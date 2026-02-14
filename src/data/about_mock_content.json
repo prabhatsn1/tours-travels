@@ -1,0 +1,91 @@
+{
+  "heroTitle": "About TravelPro",
+  "heroSubtitle": "Your trusted partner in creating unforgettable travel experiences since 2015",
+  "storyTitle": "Our Story",
+  "storyContent": [
+    "Founded in 2015 with a simple mission: to make extraordinary travel experiences accessible to everyone. What started as a small team of passionate travelers has grown into a trusted travel agency serving thousands of happy customers worldwide.",
+    "We believe that travel has the power to transform lives, broaden perspectives, and create lasting memories. Our dedicated team works tirelessly to craft personalized experiences that exceed expectations and create stories worth sharing.",
+    "Today, we're proud to be recognized as one of the leading travel agencies, known for our exceptional service, attention to detail, and commitment to sustainable travel practices."
+  ],
+  "storyImage": "/images/about-story.jpg",
+  "stats": [
+    { "icon": "Groups", "number": "10,000+", "label": "Happy Travelers" },
+    { "icon": "Star", "number": "4.9", "label": "Average Rating" },
+    { "icon": "TrendingUp", "number": "150+", "label": "Destinations" },
+    { "icon": "SupportAgent", "number": "24/7", "label": "Customer Support" }
+  ],
+  "values": [
+    {
+      "icon": "Verified",
+      "title": "Trust & Reliability",
+      "description": "We build lasting relationships through transparency and dependable service."
+    },
+    {
+      "icon": "Star",
+      "title": "Excellence",
+      "description": "We strive for perfection in every aspect of your travel experience."
+    },
+    {
+      "icon": "Groups",
+      "title": "Customer First",
+      "description": "Your satisfaction and happiness are at the heart of everything we do."
+    },
+    {
+      "icon": "SupportAgent",
+      "title": "Innovation",
+      "description": "We continuously evolve to provide cutting-edge travel solutions."
+    }
+  ],
+  "milestones": [
+    {
+      "year": "2015",
+      "event": "Company Founded",
+      "description": "Started with a vision to make travel accessible to everyone"
+    },
+    {
+      "year": "2017",
+      "event": "First 1000 Customers",
+      "description": "Reached our first major milestone in customer satisfaction"
+    },
+    {
+      "year": "2019",
+      "event": "International Expansion",
+      "description": "Expanded services to cover 50+ countries worldwide"
+    },
+    {
+      "year": "2021",
+      "event": "Digital Innovation",
+      "description": "Launched our advanced booking platform and mobile app"
+    },
+    {
+      "year": "2023",
+      "event": "10,000+ Happy Travelers",
+      "description": "Celebrated serving over 10,000 satisfied customers"
+    },
+    {
+      "year": "2025",
+      "event": "Sustainable Travel Initiative",
+      "description": "Leading the industry in eco-friendly travel solutions"
+    }
+  ],
+  "teamMembers": [
+    {
+      "name": "Sarah Johnson",
+      "position": "CEO & Founder",
+      "image": "/images/team/sarah.jpg",
+      "bio": "15+ years in travel industry, passionate about creating memorable experiences."
+    },
+    {
+      "name": "Michael Chen",
+      "position": "Head of Operations",
+      "image": "/images/team/michael.jpg",
+      "bio": "Expert in travel logistics and customer service excellence."
+    },
+    {
+      "name": "Emily Rodriguez",
+      "position": "Travel Specialist",
+      "image": "/images/team/emily.jpg",
+      "bio": "Specializes in adventure travel and cultural experiences."
+    }
+  ]
+}

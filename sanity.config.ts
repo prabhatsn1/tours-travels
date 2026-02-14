@@ -3,8 +3,8 @@
 import { defineConfig } from "sanity";
 import { structureTool } from "sanity/structure";
 import { visionTool } from "@sanity/vision";
-import { schemaTypes } from "./src/sanity/schemas";
-import { sanityConfig } from "./src/sanity/config";
+import { schemaTypes } from "./sanity/schemas";
+import { sanityConfig } from "./sanity/config";
 
 export default defineConfig({
   name: "tours-travels-studio",
