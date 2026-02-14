@@ -1,0 +1,25 @@
+{
+  "testimonials": [
+    {
+      "id": "1",
+      "customerName": "John & Emily Smith",
+      "customerImage": "/images/customers/john-emily.jpg",
+      "location": "New York, USA",
+      "rating": 5,
+      "review": "Our honeymoon in Bali was absolutely magical! The team organized everything perfectly.",
+      "tourTitle": "Magical Bali Adventure",
+      "travelDate": "2024-12-01",
+      "verified": true
+    },
+    {
+      "id": "2",
+      "customerName": "Maria Rodriguez",
+      "location": "Madrid, Spain",
+      "rating": 5,
+      "review": "Santorini exceeded all expectations. The sunset views were breathtaking!",
+      "tourTitle": "Santorini Romantic Getaway",
+      "travelDate": "2024-11-15",
+      "verified": true
+    }
+  ]
+}
