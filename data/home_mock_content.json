@@ -1,0 +1,41 @@
+{
+  "heroTitle": "Discover Your Next",
+  "heroSubtitle": "Create unforgettable memories with our expertly crafted travel experiences. From breathtaking destinations to luxurious accommodations.",
+  "heroBadge": "🌟 #1 Travel Agency 2024",
+  "servicesTitle": "Our Premium Services",
+  "servicesSubtitle": "Everything you need for the perfect trip, backed by our 24/7 support and best price guarantee",
+  "featuredPackagesTitle": "Featured Packages",
+  "destinationsTitle": "Popular Destinations",
+  "testimonialsTitle": "What Our Travelers Say",
+  "newsletterTitle": "Stay Updated with Amazing Deals",
+  "newsletterSubtitle": "Get exclusive travel deals, destination guides, and insider tips delivered to your inbox",
+  "faqTitle": "Frequently Asked Questions",
+  "faqs": [
+    {
+      "question": "How do I book a package?",
+      "answer": "You can book directly through our website or call our 24/7 support team. We accept all major payment methods and offer flexible payment plans."
+    },
+    {
+      "question": "What's included in the packages?",
+      "answer": "Our packages typically include accommodation, meals, transportation, guided tours, and travel insurance. Specific inclusions vary by package."
+    },
+    {
+      "question": "Can I customize my trip?",
+      "answer": "Absolutely! We offer fully customizable packages to match your preferences, budget, and travel dates."
+    },
+    {
+      "question": "What's your cancellation policy?",
+      "answer": "We offer flexible cancellation up to 48 hours before departure for most packages. Premium packages may have different terms."
+    },
+    {
+      "question": "Do you provide travel insurance?",
+      "answer": "Yes, comprehensive travel insurance is included in all our packages, covering medical emergencies, trip cancellation, and lost baggage."
+    },
+    {
+      "question": "How do I contact support while traveling?",
+      "answer": "Our 24/7 support team is available via phone, WhatsApp, or our mobile app. We also have local representatives in most destinations."
+    }
+  ],
+  "ctaTitle": "Ready to Start Your Adventure?",
+  "ctaSubtitle": "Get in touch with our travel experts for personalized recommendations"
+}

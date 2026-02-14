@@ -1,0 +1,90 @@
+{
+  "heroTitle": "Our Services",
+  "heroSubtitle": "Comprehensive travel solutions for every journey",
+  "coreServicesTitle": "Core Services",
+  "coreServicesSubtitle": "We're committed to providing exceptional value and service",
+  "additionalServicesTitle": "Additional Services",
+  "additionalServicesSubtitle": "Extra services to enhance your travel experience",
+  "mainServices": [
+    {
+      "id": "flights",
+      "title": "Flight Booking",
+      "description": "Find and book the best flights at competitive prices with our global airline partnerships.",
+      "icon": "Flight",
+      "image": "/images/services/flights.jpg",
+      "features": [
+        "Global airline partnerships",
+        "Best price guarantee",
+        "24/7 booking support",
+        "Flexible cancellation",
+        "Seat selection assistance"
+      ],
+      "details": "Our experienced travel consultants work with major airlines worldwide to secure the best deals for our clients. Whether you're looking for economy comfort or luxury business class, we'll find the perfect flight to match your budget and preferences."
+    },
+    {
+      "id": "hotels",
+      "title": "Hotel Booking",
+      "description": "From budget-friendly stays to luxury resorts, we have accommodations for every preference.",
+      "icon": "Hotel",
+      "image": "/images/services/hotels.jpg",
+      "features": [
+        "Handpicked accommodations",
+        "Room upgrade assistance",
+        "Special group rates",
+        "Local insider recommendations",
+        "Concierge services"
+      ],
+      "details": "We've personally vetted thousands of hotels worldwide to ensure quality and value. Our relationships with hotel partners allow us to offer exclusive rates and amenities that you won't find elsewhere."
+    },
+    {
+      "id": "transport",
+      "title": "Ground Transportation",
+      "description": "Comfortable and reliable transportation options including car rentals and transfers.",
+      "icon": "DirectionsCar",
+      "image": "/images/services/transport.jpg",
+      "features": [
+        "Airport transfers",
+        "Car rental partnerships",
+        "Private driver services",
+        "Group transportation",
+        "GPS navigation support"
+      ],
+      "details": "From the moment you land until your departure, we ensure smooth transportation. Our network includes trusted local operators and premium car rental companies."
+    }
+  ],
+  "additionalServices": [
+    {
+      "icon": "Security",
+      "title": "Travel Insurance",
+      "description": "Comprehensive coverage for medical emergencies, trip cancellations, and more."
+    },
+    {
+      "icon": "CameraAlt",
+      "title": "Photography Tours",
+      "description": "Capture memories with professional photography guides in stunning locations."
+    },
+    {
+      "icon": "Map",
+      "title": "Custom Itineraries",
+      "description": "Personalized travel plans crafted specifically for your interests and budget."
+    },
+    {
+      "icon": "SupportAgent",
+      "title": "24/7 Support",
+      "description": "Round-the-clock assistance wherever you are in the world."
+    },
+    {
+      "icon": "Language",
+      "title": "Translation Services",
+      "description": "Language support and cultural guidance for international destinations."
+    }
+  ],
+  "whyChooseUs": [
+    "Expert travel consultants with years of experience",
+    "Personalized service tailored to your needs",
+    "Competitive pricing with transparent fees",
+    "24/7 customer support during your travels",
+    "Established partnerships with trusted suppliers",
+    "Comprehensive travel insurance options"
+  ]
+}

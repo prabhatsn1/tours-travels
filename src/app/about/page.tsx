@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Container,
@@ -20,96 +20,35 @@ import {
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import Layout from "@/components/layout/Layout";
+import { getAboutPageContent, AboutPageContent } from "@/lib/sanity-content";
+import aboutMockContent from "@/data/about_mock_content.json";
+
+// Icon mapping for dynamically rendering icons from Sanity
+const iconMap: Record<string, React.ReactNode> = {
+  Groups: <Groups />,
+  Star: <Star />,
+  TrendingUp: <TrendingUp />,
+  SupportAgent: <SupportAgent />,
+  Verified: <Verified />,
+};
 
 const AboutPage: React.FC = () => {
-  const teamMembers = [
-    {
-      name: "Sarah Johnson",
-      position: "CEO & Founder",
-      image: "/images/team/sarah.jpg",
-      bio: "15+ years in travel industry, passionate about creating memorable experiences.",
-    },
-    {
-      name: "Michael Chen",
-      position: "Head of Operations",
-      image: "/images/team/michael.jpg",
-      bio: "Expert in travel logistics and customer service excellence.",
-    },
-    {
-      name: "Emily Rodriguez",
-      position: "Travel Specialist",
-      image: "/images/team/emily.jpg",
-      bio: "Specializes in adventure travel and cultural experiences.",
-    },
-  ];
+  const [content, setContent] = useState<AboutPageContent | null>(null);
 
-  const milestones = [
-    {
-      year: "2015",
-      event: "Company Founded",
-      description:
-        "Started with a vision to make travel accessible to everyone",
-    },
-    {
-      year: "2017",
-      event: "First 1000 Customers",
-      description: "Reached our first major milestone in customer satisfaction",
-    },
-    {
-      year: "2019",
-      event: "International Expansion",
-      description: "Expanded services to cover 50+ countries worldwide",
-    },
-    {
-      year: "2021",
-      event: "Digital Innovation",
-      description: "Launched our advanced booking platform and mobile app",
-    },
-    {
-      year: "2023",
-      event: "10,000+ Happy Travelers",
-      description: "Celebrated serving over 10,000 satisfied customers",
-    },
-    {
-      year: "2025",
-      event: "Sustainable Travel Initiative",
-      description: "Leading the industry in eco-friendly travel solutions",
-    },
-  ];
+  useEffect(() => {
+    getAboutPageContent().then(setContent);
+  }, []);
 
-  const stats = [
-    { icon: <Groups />, number: "10,000+", label: "Happy Travelers" },
-    { icon: <Star />, number: "4.9", label: "Average Rating" },
-    { icon: <TrendingUp />, number: "150+", label: "Destinations" },
-    { icon: <SupportAgent />, number: "24/7", label: "Customer Support" },
-  ];
+  // Use defaults until content loads
+  const teamMembers = content?.teamMembers || aboutMockContent.teamMembers;
 
-  const values = [
-    {
-      icon: <Verified />,
-      title: "Trust & Reliability",
-      description:
-        "We build lasting relationships through transparency and dependable service.",
-    },
-    {
-      icon: <Star />,
-      title: "Excellence",
-      description:
-        "We strive for perfection in every aspect of your travel experience.",
-    },
-    {
-      icon: <Groups />,
-      title: "Customer First",
-      description:
-        "Your satisfaction and happiness are at the heart of everything we do.",
-    },
-    {
-      icon: <SupportAgent />,
-      title: "Innovation",
-      description:
-        "We continuously evolve to provide cutting-edge travel solutions.",
-    },
-  ];
+  const milestones = content?.milestones || aboutMockContent.milestones;
+
+  const stats = content?.stats || aboutMockContent.stats;
+
+  const values = content?.values || aboutMockContent.values;
+
+  const storyContent = content?.storyContent || aboutMockContent.storyContent;
 
   return (
     <Layout>
@@ -137,15 +76,15 @@ const AboutPage: React.FC = () => {
               fontWeight="bold"
               align="center"
             >
-              About TravelPro
+              {content?.heroTitle || "About TravelPro"}
             </Typography>
             <Typography
               variant="h5"
               align="center"
               sx={{ opacity: 0.9, maxWidth: 800, mx: "auto" }}
             >
-              Your trusted partner in creating unforgettable travel experiences
-              since 2015
+              {content?.heroSubtitle ||
+                "Your trusted partner in creating unforgettable travel experiences since 2015"}
             </Typography>
           </motion.div>
         </Container>
@@ -171,41 +110,23 @@ const AboutPage: React.FC = () => {
                 fontWeight="bold"
                 color="primary"
               >
-                Our Story
+                {content?.storyTitle || "Our Story"}
               </Typography>
-              <Typography
-                variant="body1"
-                paragraph
-                sx={{ fontSize: "1.1rem", lineHeight: 1.8 }}
-              >
-                Founded in 2015 with a simple mission: to make extraordinary
-                travel experiences accessible to everyone. What started as a
-                small team of passionate travelers has grown into a trusted
-                travel agency serving thousands of happy customers worldwide.
-              </Typography>
-              <Typography
-                variant="body1"
-                paragraph
-                sx={{ fontSize: "1.1rem", lineHeight: 1.8 }}
-              >
-                We believe that travel has the power to transform lives, broaden
-                perspectives, and create lasting memories. Our dedicated team
-                works tirelessly to craft personalized experiences that exceed
-                expectations and create stories worth sharing.
-              </Typography>
-              <Typography
-                variant="body1"
-                sx={{ fontSize: "1.1rem", lineHeight: 1.8 }}
-              >
-                Today, we&apos;re proud to be recognized as one of the leading
-                travel agencies, known for our exceptional service, attention to
-                detail, and commitment to sustainable travel practices.
-              </Typography>
+              {storyContent.map((paragraph, index) => (
+                <Typography
+                  key={index}
+                  variant="body1"
+                  paragraph={index < storyContent.length - 1}
+                  sx={{ fontSize: "1.1rem", lineHeight: 1.8 }}
+                >
+                  {paragraph}
+                </Typography>
+              ))}
             </Box>
             <Box sx={{ flex: 1 }}>
               <Box
                 component="img"
-                src="/images/about-story.jpg"
+                src={content?.storyImage || "/images/about-story.jpg"}
                 alt="Our Story"
                 sx={{
                   width: "100%",
@@ -254,7 +175,7 @@ const AboutPage: React.FC = () => {
                         justifyContent: "center",
                       }}
                     >
-                      {stat.icon}
+                      {iconMap[stat.icon] || <Star />}
                     </Box>
                     <Typography variant="h4" fontWeight="bold" color="primary">
                       {stat.number}
@@ -329,7 +250,7 @@ const AboutPage: React.FC = () => {
                         mb: 2,
                       }}
                     >
-                      {value.icon}
+                      {iconMap[value.icon] || <Star />}
                     </Box>
                     <Typography variant="h6" gutterBottom fontWeight="bold">
                       {value.title}

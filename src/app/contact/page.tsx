@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Container,
@@ -41,7 +41,9 @@ import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Layout from "@/components/layout/Layout";
-import { contactInfo } from "@/data/sampleData";
+import { getContactInfo } from "@/lib/sanity-content";
+import contactMockContent from "@/data/contact_mock_content.json";
+import type { ContactInfo } from "@/types";
 
 interface ContactFormData {
   name: string;
@@ -71,6 +73,13 @@ const ContactPage: React.FC = () => {
   const [submitStatus, setSubmitStatus] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
+  const [contactInfo, setContactInfoState] = useState<ContactInfo>(
+    contactMockContent as ContactInfo,
+  );
+
+  useEffect(() => {
+    getContactInfo().then(setContactInfoState);
+  }, []);
 
   const {
     control,
@@ -132,7 +141,7 @@ const ContactPage: React.FC = () => {
       value: `${contactInfo.address.street}, ${contactInfo.address.city}`,
       description: "Come to our office",
       action: `https://maps.google.com/?q=${encodeURIComponent(
-        `${contactInfo.address.street}, ${contactInfo.address.city}, ${contactInfo.address.state}`
+        `${contactInfo.address.street}, ${contactInfo.address.city}, ${contactInfo.address.state}`,
       )}`,
     },
   ];

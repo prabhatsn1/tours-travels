@@ -53,6 +53,13 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/**",
       },
+      // Sanity CMS CDN
+      {
+        protocol: "https",
+        hostname: "cdn.sanity.io",
+        port: "",
+        pathname: "/**",
+      },
       // Add your own domain if you have one
       {
         protocol: "https",
