@@ -46,8 +46,12 @@ import Layout from "@/components/layout/Layout";
 import PackageCard from "@/components/ui/PackageCard";
 import TestimonialCard from "@/components/ui/TestimonialCard";
 import { packageAPI, getDestinations } from "@/lib/api";
-import { TourPackage, Destination } from "@/types";
-import { testimonials } from "@/data/sampleData";
+import { TourPackage, Destination, Testimonial } from "@/types";
+import {
+  getHomePageContent,
+  getTestimonials,
+  HomePageContent,
+} from "@/lib/sanity-content";
 
 const HomePage: React.FC = () => {
   const [searchData, setSearchData] = useState({
@@ -66,17 +70,30 @@ const HomePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch data from APIs
+  // Sanity CMS content states
+  const [homeContent, setHomeContent] = useState<HomePageContent | null>(null);
+  const [testimonialsList, setTestimonialsList] = useState<Testimonial[]>([]);
+
+  // Fetch data from APIs and Sanity
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // Fetch featured packages and popular destinations in parallel
-        const [packagesResponse, destinationsResponse] = await Promise.all([
+        // Fetch everything in parallel:
+        // - Featured packages & destinations from MongoDB API
+        // - Static content & testimonials from Sanity (with fallback)
+        const [
+          packagesResponse,
+          destinationsResponse,
+          sanityContent,
+          sanityTestimonials,
+        ] = await Promise.all([
           packageAPI.getFeaturedPackages(),
           getDestinations({ featured: true, limit: 6 }),
+          getHomePageContent(),
+          getTestimonials(),
         ]);
 
         if (packagesResponse.success && packagesResponse.data) {
@@ -90,9 +107,12 @@ const HomePage: React.FC = () => {
         } else {
           console.error(
             "Failed to fetch destinations:",
-            destinationsResponse.error
+            destinationsResponse.error,
           );
         }
+
+        setHomeContent(sanityContent);
+        setTestimonialsList(sanityTestimonials);
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Failed to load data. Please try again later.");
@@ -192,7 +212,7 @@ const HomePage: React.FC = () => {
             >
               <Box sx={{ mb: 2 }}>
                 <Chip
-                  label="🌟 #1 Travel Agency 2024"
+                  label={homeContent?.heroBadge || "🌟 #1 Travel Agency 2024"}
                   sx={{
                     backgroundColor: "rgba(255, 255, 255, 0.2)",
                     color: "white",
@@ -226,9 +246,8 @@ const HomePage: React.FC = () => {
                 variant="h5"
                 sx={{ mb: 4, opacity: 0.9, lineHeight: 1.6 }}
               >
-                Create unforgettable memories with our expertly crafted travel
-                experiences. From breathtaking destinations to luxurious
-                accommodations.
+                {homeContent?.heroSubtitle ||
+                  "Create unforgettable memories with our expertly crafted travel experiences. From breathtaking destinations to luxurious accommodations."}
               </Typography>
 
               <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
@@ -457,7 +476,7 @@ const HomePage: React.FC = () => {
                 mb: 2,
               }}
             >
-              Our Premium Services
+              {homeContent?.servicesTitle || "Our Premium Services"}
             </Typography>
             <Typography
               variant="h6"
@@ -470,8 +489,8 @@ const HomePage: React.FC = () => {
                 lineHeight: 1.6,
               }}
             >
-              Everything you need for the perfect trip, backed by our 24/7
-              support and best price guarantee
+              {homeContent?.servicesSubtitle ||
+                "Everything you need for the perfect trip, backed by our 24/7 support and best price guarantee"}
             </Typography>
           </Box>
         </motion.div>
@@ -660,7 +679,7 @@ const HomePage: React.FC = () => {
             gutterBottom
             fontWeight="bold"
           >
-            Featured Packages
+            {homeContent?.featuredPackagesTitle || "Featured Packages"}
           </Typography>
           <Typography
             variant="h6"
@@ -750,11 +769,12 @@ const HomePage: React.FC = () => {
             />
             <Email sx={{ fontSize: 60, mb: 2, opacity: 0.9 }} />
             <Typography variant="h4" gutterBottom fontWeight="bold">
-              Stay Updated with Amazing Deals
+              {homeContent?.newsletterTitle ||
+                "Stay Updated with Amazing Deals"}
             </Typography>
             <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
-              Get exclusive travel deals, destination guides, and insider tips
-              delivered to your inbox
+              {homeContent?.newsletterSubtitle ||
+                "Get exclusive travel deals, destination guides, and insider tips delivered to your inbox"}
             </Typography>
             <Stack
               direction={{ xs: "column", sm: "row" }}
@@ -805,91 +825,102 @@ const HomePage: React.FC = () => {
   );
 
   // FAQ Section
-  const FAQSection = () => (
-    <Container maxWidth="lg" sx={{ py: 8 }}>
-      <motion.div
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        viewport={{ once: true }}
-      >
-        <Typography variant="h3" align="center" gutterBottom fontWeight="bold">
-          Frequently Asked Questions
-        </Typography>
-        <Typography
-          variant="h6"
-          align="center"
-          color="text.secondary"
-          sx={{ mb: 6 }}
-        >
-          Everything you need to know about traveling with us
-        </Typography>
-      </motion.div>
+  const FAQSection = () => {
+    const faqItems = homeContent?.faqs || [
+      {
+        question: "How do I book a package?",
+        answer:
+          "You can book directly through our website or call our 24/7 support team. We accept all major payment methods and offer flexible payment plans.",
+      },
+      {
+        question: "What's included in the packages?",
+        answer:
+          "Our packages typically include accommodation, meals, transportation, guided tours, and travel insurance. Specific inclusions vary by package.",
+      },
+      {
+        question: "Can I customize my trip?",
+        answer:
+          "Absolutely! We offer fully customizable packages to match your preferences, budget, and travel dates.",
+      },
+      {
+        question: "What's your cancellation policy?",
+        answer:
+          "We offer flexible cancellation up to 48 hours before departure for most packages. Premium packages may have different terms.",
+      },
+      {
+        question: "Do you provide travel insurance?",
+        answer:
+          "Yes, comprehensive travel insurance is included in all our packages, covering medical emergencies, trip cancellation, and lost baggage.",
+      },
+      {
+        question: "How do I contact support while traveling?",
+        answer:
+          "Our 24/7 support team is available via phone, WhatsApp, or our mobile app. We also have local representatives in most destinations.",
+      },
+    ];
+    const half = Math.ceil(faqItems.length / 2);
+    const leftFaqs = faqItems.slice(0, half);
+    const rightFaqs = faqItems.slice(half);
 
-      <Stack direction={{ xs: "column", sm: "row" }} spacing={4}>
-        <Box sx={{ flex: 1 }}>
-          {[
-            {
-              question: "How do I book a package?",
-              answer:
-                "You can book directly through our website or call our 24/7 support team. We accept all major payment methods and offer flexible payment plans.",
-            },
-            {
-              question: "What's included in the packages?",
-              answer:
-                "Our packages typically include accommodation, meals, transportation, guided tours, and travel insurance. Specific inclusions vary by package.",
-            },
-            {
-              question: "Can I customize my trip?",
-              answer:
-                "Absolutely! We offer fully customizable packages to match your preferences, budget, and travel dates.",
-            },
-          ].map((faq, index) => (
-            <Accordion key={index} sx={{ mb: 2 }}>
-              <AccordionSummary expandIcon={<ExpandMore />}>
-                <Typography variant="h6" fontWeight="bold">
-                  {faq.question}
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Typography color="text.secondary">{faq.answer}</Typography>
-              </AccordionDetails>
-            </Accordion>
-          ))}
-        </Box>
-        <Box sx={{ flex: 1 }}>
-          {[
-            {
-              question: "What's your cancellation policy?",
-              answer:
-                "We offer flexible cancellation up to 48 hours before departure for most packages. Premium packages may have different terms.",
-            },
-            {
-              question: "Do you provide travel insurance?",
-              answer:
-                "Yes, comprehensive travel insurance is included in all our packages, covering medical emergencies, trip cancellation, and lost baggage.",
-            },
-            {
-              question: "How do I contact support while traveling?",
-              answer:
-                "Our 24/7 support team is available via phone, WhatsApp, or our mobile app. We also have local representatives in most destinations.",
-            },
-          ].map((faq, index) => (
-            <Accordion key={index} sx={{ mb: 2 }}>
-              <AccordionSummary expandIcon={<ExpandMore />}>
-                <Typography variant="h6" fontWeight="bold">
-                  {faq.question}
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Typography color="text.secondary">{faq.answer}</Typography>
-              </AccordionDetails>
-            </Accordion>
-          ))}
-        </Box>
-      </Stack>
-    </Container>
-  );
+    return (
+      <Container maxWidth="lg" sx={{ py: 8 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+        >
+          <Typography
+            variant="h3"
+            align="center"
+            gutterBottom
+            fontWeight="bold"
+          >
+            {homeContent?.faqTitle || "Frequently Asked Questions"}
+          </Typography>
+          <Typography
+            variant="h6"
+            align="center"
+            color="text.secondary"
+            sx={{ mb: 6 }}
+          >
+            Everything you need to know about traveling with us
+          </Typography>
+        </motion.div>
+
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={4}>
+          <Box sx={{ flex: 1 }}>
+            {leftFaqs.map((faq, index) => (
+              <Accordion key={index} sx={{ mb: 2 }}>
+                <AccordionSummary expandIcon={<ExpandMore />}>
+                  <Typography variant="h6" fontWeight="bold">
+                    {faq.question}
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Typography color="text.secondary">{faq.answer}</Typography>
+                </AccordionDetails>
+              </Accordion>
+            ))}
+          </Box>
+          <Box sx={{ flex: 1 }}>
+            {rightFaqs.map((faq, index) => (
+              <Accordion key={index} sx={{ mb: 2 }}>
+                <AccordionSummary expandIcon={<ExpandMore />}>
+                  <Typography variant="h6" fontWeight="bold">
+                    {faq.question}
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Typography color="text.secondary">{faq.answer}</Typography>
+                </AccordionDetails>
+              </Accordion>
+            ))}
+          </Box>
+        </Stack>
+      </Container>
+    );
+  };
 
   // Contact CTA Section
   const ContactCTASection = () => (
@@ -897,11 +928,11 @@ const HomePage: React.FC = () => {
       <Container maxWidth="lg">
         <Card sx={{ p: 6, textAlign: "center" }}>
           <Typography variant="h4" gutterBottom fontWeight="bold">
-            Ready to Start Your Adventure?
+            {homeContent?.ctaTitle || "Ready to Start Your Adventure?"}
           </Typography>
           <Typography variant="h6" color="text.secondary" sx={{ mb: 4 }}>
-            Get in touch with our travel experts for personalized
-            recommendations
+            {homeContent?.ctaSubtitle ||
+              "Get in touch with our travel experts for personalized recommendations"}
           </Typography>
           <Stack
             direction={{ xs: "column", sm: "row" }}
@@ -954,7 +985,7 @@ const HomePage: React.FC = () => {
             gutterBottom
             fontWeight="bold"
           >
-            What Our Travelers Say
+            {homeContent?.testimonialsTitle || "What Our Travelers Say"}
           </Typography>
           <Typography
             variant="h6"
@@ -971,7 +1002,7 @@ const HomePage: React.FC = () => {
           spacing={4}
           sx={{ flexWrap: "wrap", justifyContent: "center" }}
         >
-          {testimonials.map((testimonial, index) => (
+          {testimonialsList.map((testimonial, index) => (
             <Box
               key={testimonial.id}
               sx={{ flex: { xs: "1 1 100%", md: "1 1 45%", lg: "1 1 30%" } }}
@@ -994,7 +1025,7 @@ const HomePage: React.FC = () => {
         viewport={{ once: true }}
       >
         <Typography variant="h3" align="center" gutterBottom fontWeight="bold">
-          Popular Destinations
+          {homeContent?.destinationsTitle || "Popular Destinations"}
         </Typography>
         <Typography
           variant="h6"
