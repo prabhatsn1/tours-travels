@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Container,
@@ -26,102 +26,49 @@ import {
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import Layout from "@/components/layout/Layout";
+import { getServices } from "@/lib/sanity-content";
+import servicesMockContent from "@/data/services_mock_content.json";
+import type { Service } from "@/types";
+
+// Icon mapping for dynamically rendering icons from Sanity
+const iconMap: Record<string, React.ReactNode> = {
+  Flight: <Flight />,
+  Hotel: <Hotel />,
+  DirectionsCar: <DirectionsCar />,
+  Security: <Security />,
+  CameraAlt: <CameraAlt />,
+  Map: <Map />,
+  SupportAgent: <SupportAgent />,
+  Language: <Language />,
+  DocumentText: <Security />,
+  Shield: <Security />,
+  Airplane: <Flight />,
+  Building: <Hotel />,
+};
 
 const ServicesPage: React.FC = () => {
-  const mainServices = [
-    {
-      id: "flights",
-      title: "Flight Booking",
-      description:
-        "Find and book the best flights at competitive prices with our global airline partnerships.",
-      icon: <Flight />,
-      image: "/images/services/flights.jpg",
-      features: [
-        "Global airline partnerships",
-        "Best price guarantee",
-        "24/7 booking support",
-        "Flexible cancellation",
-        "Seat selection assistance",
-      ],
-      details:
-        "Our experienced travel consultants work with major airlines worldwide to secure the best deals for our clients. Whether you're looking for economy comfort or luxury business class, we'll find the perfect flight to match your budget and preferences.",
-    },
-    {
-      id: "hotels",
-      title: "Hotel Booking",
-      description:
-        "From budget-friendly stays to luxury resorts, we have accommodations for every preference.",
-      icon: <Hotel />,
-      image: "/images/services/hotels.jpg",
-      features: [
-        "Handpicked accommodations",
-        "Room upgrade assistance",
-        "Special group rates",
-        "Local insider recommendations",
-        "Concierge services",
-      ],
-      details:
-        "We&apos;ve personally vetted thousands of hotels worldwide to ensure quality and value. Our relationships with hotel partners allow us to offer exclusive rates and amenities that you won&apos;t find elsewhere.",
-    },
-    {
-      id: "transport",
-      title: "Ground Transportation",
-      description:
-        "Comfortable and reliable transportation options including car rentals and transfers.",
-      icon: <DirectionsCar />,
-      image: "/images/services/transport.jpg",
-      features: [
-        "Airport transfers",
-        "Car rental partnerships",
-        "Private driver services",
-        "Group transportation",
-        "GPS navigation support",
-      ],
-      details:
-        "From the moment you land until your departure, we ensure smooth transportation. Our network includes trusted local operators and premium car rental companies.",
-    },
-  ];
+  const [servicesList, setServicesList] = useState<Service[]>([]);
 
-  const additionalServices = [
-    {
-      icon: <Security />,
-      title: "Travel Insurance",
-      description:
-        "Comprehensive coverage for medical emergencies, trip cancellations, and more.",
-    },
-    {
-      icon: <CameraAlt />,
-      title: "Photography Tours",
-      description:
-        "Capture memories with professional photography guides in stunning locations.",
-    },
-    {
-      icon: <Map />,
-      title: "Custom Itineraries",
-      description:
-        "Personalized travel plans crafted specifically for your interests and budget.",
-    },
-    {
-      icon: <SupportAgent />,
-      title: "24/7 Support",
-      description: "Round-the-clock assistance wherever you are in the world.",
-    },
-    {
-      icon: <Language />,
-      title: "Translation Services",
-      description:
-        "Language support and cultural guidance for international destinations.",
-    },
-  ];
+  useEffect(() => {
+    getServices().then(setServicesList);
+  }, []);
+  const mainServices = servicesMockContent.mainServices;
 
-  const whyChooseUs = [
-    "Expert travel consultants with years of experience",
-    "Personalized service tailored to your needs",
-    "Competitive pricing with transparent fees",
-    "24/7 customer support during your travels",
-    "Established partnerships with trusted suppliers",
-    "Comprehensive travel insurance options",
-  ];
+  // Use Sanity services for the additional services list, or fallback to JSON
+  const additionalServices =
+    servicesList.length > 0
+      ? servicesList.map((s) => ({
+          icon: iconMap[s.icon] || <Star />,
+          title: s.name,
+          description: s.description,
+        }))
+      : servicesMockContent.additionalServices.map((s) => ({
+          icon: iconMap[s.icon] || <Star />,
+          title: s.title,
+          description: s.description,
+        }));
+
+  const whyChooseUs = servicesMockContent.whyChooseUs;
 
   return (
     <Layout>
@@ -223,7 +170,7 @@ const ServicesPage: React.FC = () => {
                                 justifyContent: "center",
                               }}
                             >
-                              {service.icon}
+                              {iconMap[service.icon] || <Star />}
                             </Box>
                             <Typography
                               variant="h4"
